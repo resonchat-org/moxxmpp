@@ -3,6 +3,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/message.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/stanza.dart';
@@ -11,10 +12,7 @@ import 'package:moxxmpp/src/util/typed_map.dart';
 
 /// Representation of a <stanza-id /> element.
 class StanzaId {
-  const StanzaId(
-    this.id,
-    this.by,
-  );
+  const StanzaId(this.id, this.by);
 
   /// The unique stanza id.
   final String id;
@@ -26,10 +24,7 @@ class StanzaId {
     return XMLNode.xmlns(
       tag: 'stanza-id',
       xmlns: stableIdXmlns,
-      attributes: {
-        'id': id,
-        'by': by.toString(),
-      },
+      attributes: {'id': id, 'by': by.toString()},
     );
   }
 }
@@ -76,13 +71,13 @@ class StableIdManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          callback: _onMessage,
-          // Before the MessageManager
-          priority: -99,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      callback: _onMessage,
+      // Before the MessageManager
+      priority: messageExtensionPriority,
+    ),
+  ];
 
   @override
   Future<bool> isSupported() async => true;
@@ -94,8 +89,10 @@ class StableIdManager extends XmppManagerBase {
     String? originId;
     List<StanzaId>? stanzaIds;
     final originIdElement = message.firstTag('origin-id', xmlns: stableIdXmlns);
-    final stanzaIdElements =
-        message.findTags('stanza-id', xmlns: stableIdXmlns);
+    final stanzaIdElements = message.findTags(
+      'stanza-id',
+      xmlns: stableIdXmlns,
+    );
 
     // Process the origin id
     if (originIdElement != null) {
@@ -114,13 +111,7 @@ class StableIdManager extends XmppManagerBase {
           .toList();
     }
 
-    return state
-      ..extensions.set(
-        StableIdData(
-          originId,
-          stanzaIds,
-        ),
-      );
+    return state..extensions.set(StableIdData(originId, stanzaIds));
   }
 
   List<XMLNode> _messageSendingCallback(
@@ -128,9 +119,7 @@ class StableIdManager extends XmppManagerBase {
   ) {
     final data = extensions.get<StableIdData>();
     if (data?.originId != null) {
-      return [
-        data!.toOriginIdElement(),
-      ];
+      return [data!.toOriginIdElement()];
     }
 
     return [];

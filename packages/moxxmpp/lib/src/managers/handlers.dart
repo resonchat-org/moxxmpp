@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:moxxmpp/src/managers/data.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/stanza.dart';
 import 'package:moxxmpp/src/stringxml.dart';
@@ -15,11 +16,7 @@ abstract class Handler {
 
 /// A Handler that specialises in matching Nonzas (and stanzas).
 class NonzaHandler extends Handler {
-  NonzaHandler({
-    required this.callback,
-    this.nonzaTag,
-    this.nonzaXmlns,
-  });
+  NonzaHandler({required this.callback, this.nonzaTag, this.nonzaXmlns});
 
   /// The function to call when a nonza matches the description.
   final Future<bool> Function(XMLNode) callback;
@@ -54,7 +51,7 @@ class StanzaHandler extends Handler {
     required this.callback,
     this.tagXmlns,
     this.tagName,
-    this.priority = 0,
+    this.priority = stanzaHandlerDefaultPriority,
     this.stanzaTag,
     this.xmlns,
   });
@@ -100,7 +97,8 @@ class StanzaHandler extends Handler {
         matches &= firstTag?.xmlns == tagXmlns;
       }
     } else if (tagXmlns != null) {
-      matches &= node.children.firstWhereOrNull(
+      matches &=
+          node.children.firstWhereOrNull(
             (XMLNode node_) => node_.attributes['xmlns'] == tagXmlns,
           ) !=
           null;

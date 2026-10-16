@@ -5,6 +5,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/message.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/rfcs/rfc_4790.dart';
@@ -43,9 +44,7 @@ class Sticker {
       if (suggest.isEmpty) {
         attrs = {};
       } else {
-        attrs = {
-          'xml:lang': suggest,
-        };
+        attrs = {'xml:lang': suggest};
       }
 
       return XMLNode(
@@ -137,18 +136,9 @@ class StickerPack {
       xmlns: stickersXmlns,
       children: [
         // Pack metadata
-        XMLNode(
-          tag: 'name',
-          text: name,
-        ),
-        XMLNode(
-          tag: 'summary',
-          text: summary,
-        ),
-        constructHashElement(
-          hashAlgorithm,
-          hashValue,
-        ),
+        XMLNode(tag: 'name', text: name),
+        XMLNode(tag: 'summary', text: summary),
+        constructHashElement(hashAlgorithm, hashValue),
 
         ...restricted ? [XMLNode(tag: 'restricted')] : [],
 
@@ -218,13 +208,10 @@ class StickerPack {
     stickersString.add(0x1c);
 
     // Calculate the hash
-    final rawHash = await CryptographicHashManager.hashFromData(
-      hashFunction,
-      [
-        ...metaString,
-        ...stickersString,
-      ],
-    );
+    final rawHash = await CryptographicHashManager.hashFromData(hashFunction, [
+      ...metaString,
+      ...stickersString,
+    ]);
     return base64.encode(rawHash).substring(0, 24);
   }
 }
@@ -250,14 +237,14 @@ class StickersManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagXmlns: stickersXmlns,
-          tagName: 'sticker',
-          callback: _onIncomingMessage,
-          priority: -99,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagXmlns: stickersXmlns,
+      tagName: 'sticker',
+      callback: _onIncomingMessage,
+      priority: messageExtensionPriority,
+    ),
+  ];
 
   Future<StanzaHandlerData> _onIncomingMessage(
     Stanza stanza,
@@ -282,9 +269,7 @@ class StickersManager extends XmppManagerBase {
             XMLNode.xmlns(
               tag: 'sticker',
               xmlns: stickersXmlns,
-              attributes: {
-                'pack': data.stickerPackId,
-              },
+              attributes: {'pack': data.stickerPackId},
             ),
             data.sticker.toXML(),
 
@@ -312,10 +297,7 @@ class StickersManager extends XmppManagerBase {
       stickersXmlns,
       pack.toXML(),
       id: pack.id,
-      options: PubSubPublishOptions(
-        maxItems: 'max',
-        accessModel: accessModel,
-      ),
+      options: PubSubPublishOptions(maxItems: 'max', accessModel: accessModel),
     );
   }
 
@@ -328,11 +310,7 @@ class StickersManager extends XmppManagerBase {
   ) async {
     final pm = getAttributes().getManagerById<PubSubManager>(pubsubManager)!;
 
-    return pm.retract(
-      jid,
-      stickersXmlns,
-      id,
-    );
+    return pm.retract(jid, stickersXmlns, id);
   }
 
   /// Fetches the sticker pack with id [id] from [jid].

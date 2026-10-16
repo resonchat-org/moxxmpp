@@ -2,6 +2,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/message.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/stanza.dart';
@@ -48,10 +49,7 @@ enum ChatState implements StanzaHandlerExtension {
   }
 
   XMLNode toXML() {
-    return XMLNode.xmlns(
-      tag: toName(),
-      xmlns: chatStateXmlns,
-    );
+    return XMLNode.xmlns(tag: toName(), xmlns: chatStateXmlns);
   }
 }
 
@@ -63,14 +61,14 @@ class ChatStateManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagXmlns: chatStateXmlns,
-          callback: _onChatStateReceived,
-          // Before the message handler
-          priority: -99,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagXmlns: chatStateXmlns,
+      callback: _onChatStateReceived,
+      // Before the message handler
+      priority: messageExtensionPriority,
+    ),
+  ];
 
   @override
   Future<bool> isSupported() async => true;
@@ -99,13 +97,7 @@ class ChatStateManager extends XmppManagerBase {
   }) async {
     await getAttributes().sendStanza(
       StanzaDetails(
-        Stanza.message(
-          to: to,
-          type: messageType,
-          children: [
-            state.toXML(),
-          ],
-        ),
+        Stanza.message(to: to, type: messageType, children: [state.toXML()]),
         awaitable: false,
       ),
     );
@@ -115,11 +107,7 @@ class ChatStateManager extends XmppManagerBase {
     TypedMap<StanzaHandlerExtension> extensions,
   ) {
     final data = extensions.get<ChatState>();
-    return data != null
-        ? [
-            data.toXML(),
-          ]
-        : [];
+    return data != null ? [data.toXML()] : [];
   }
 
   @override

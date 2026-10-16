@@ -2,6 +2,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/message.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/stanza.dart';
@@ -47,10 +48,7 @@ enum MessageProcessingHint {
         break;
     }
 
-    return XMLNode.xmlns(
-      tag: tag,
-      xmlns: messageProcessingHintsXmlns,
-    );
+    return XMLNode.xmlns(tag: tag, xmlns: messageProcessingHintsXmlns);
   }
 }
 
@@ -69,14 +67,14 @@ class MessageProcessingHintManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagXmlns: messageProcessingHintsXmlns,
-          callback: _onMessage,
-          // Before the message handler
-          priority: -99,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagXmlns: messageProcessingHintsXmlns,
+      callback: _onMessage,
+      // Before the message handler
+      priority: messageExtensionPriority,
+    ),
+  ];
 
   Future<StanzaHandlerData> _onMessage(
     Stanza stanza,

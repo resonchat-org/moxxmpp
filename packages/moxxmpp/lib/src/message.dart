@@ -5,6 +5,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/stanza.dart';
 import 'package:moxxmpp/src/stringxml.dart';
 import 'package:moxxmpp/src/util/typed_map.dart';
@@ -22,9 +23,8 @@ extension StringToJid on String {
 /// A callback that is called whenever a message is sent using
 /// [MessageManager.sendMessage]. The input the typed map that is passed to
 /// sendMessage.
-typedef MessageSendingCallback = List<XMLNode> Function(
-  TypedMap<StanzaHandlerExtension>,
-);
+typedef MessageSendingCallback =
+    List<XMLNode> Function(TypedMap<StanzaHandlerExtension>);
 
 /// The raw content of the <body /> element.
 class MessageBodyData implements StanzaHandlerExtension {
@@ -34,10 +34,7 @@ class MessageBodyData implements StanzaHandlerExtension {
   final String? body;
 
   XMLNode toXML() {
-    return XMLNode(
-      tag: 'body',
-      text: body,
-    );
+    return XMLNode(tag: 'body', text: body);
   }
 }
 
@@ -52,11 +49,6 @@ class MessageIdData implements StanzaHandlerExtension {
 class MessageManager extends XmppManagerBase {
   MessageManager() : super(messageManager);
 
-  /// The priority of the message handler. If a handler should run before this one,
-  /// which emits the [MessageEvent] event and terminates processing, make sure it
-  /// has a priority greater than [messageHandlerPriority].
-  static int messageHandlerPriority = -100;
-
   /// A list of callbacks that are called when a message is sent in order to add
   /// appropriate child elements.
   final List<MessageSendingCallback> _messageSendingCallbacks =
@@ -68,12 +60,14 @@ class MessageManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          callback: _onMessage,
-          priority: messageHandlerPriority,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      callback: _onMessage,
+      // Extensions must use [messageExtensionPriority] (or higher) so they
+      // run before this handler terminates the pipeline.
+      priority: messageHandlerPriority,
+    ),
+  ];
 
   @override
   Future<bool> isSupported() async => true;
@@ -84,9 +78,7 @@ class MessageManager extends XmppManagerBase {
   ) async {
     final body = stanza.firstTag('body');
     if (body != null) {
-      state.extensions.set(
-        MessageBodyData(body.innerText()),
-      );
+      state.extensions.set(MessageBodyData(body.innerText()));
     }
 
     getAttributes().sendEvent(
@@ -111,6 +103,7 @@ class MessageManager extends XmppManagerBase {
     JID to,
     TypedMap<StanzaHandlerExtension> extensions, {
     String type = 'chat',
+    bool shouldEncrypt = true,
   }) async {
     await getAttributes().sendStanza(
       StanzaDetails(
@@ -125,6 +118,7 @@ class MessageManager extends XmppManagerBase {
         ),
         extensions: extensions,
         awaitable: false,
+        shouldEncrypt: shouldEncrypt,
       ),
     );
   }

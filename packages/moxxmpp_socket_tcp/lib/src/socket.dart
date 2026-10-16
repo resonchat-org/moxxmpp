@@ -8,12 +8,60 @@ import 'package:moxxmpp_socket_tcp/src/events.dart';
 import 'package:moxxmpp_socket_tcp/src/record.dart';
 import 'package:moxxmpp_socket_tcp/src/rfc_2782.dart';
 
+/// Opens a plain TCP socket to [host]:[port].
+///
+/// Injected by apps that need SOCKS5 / Tor (Conversations-style unified
+/// network path) so every XMPP hop goes through the same connector.
+typedef TcpSocketConnect =
+    Future<Socket> Function(String host, int port, {Duration? timeout});
+
+/// Upgrades a plain [Socket] to TLS (inject when [connectSocket] returns a
+/// wrapper that [SecureSocket.secure] cannot unwrap).
+typedef TcpSocketSecure =
+    Future<SecureSocket> Function(
+      Socket socket, {
+      dynamic host,
+      List<String>? supportedProtocols,
+      bool Function(X509Certificate certificate)? onBadCertificate,
+    });
+
 /// TCP socket implementation for XmppConnection
 class TCPSocketWrapper extends BaseSocketWrapper {
-  TCPSocketWrapper(this._logIncomingOutgoing);
+  TCPSocketWrapper(
+    this._logIncomingOutgoing, {
+    TcpSocketConnect? connectSocket,
+    TcpSocketSecure? secureSocket,
+  }) : _connectSocket = connectSocket ?? defaultTcpConnect,
+       _secureSocket = secureSocket ?? defaultTcpSecure;
+
+  /// Default direct connect (no proxy).
+  static Future<Socket> defaultTcpConnect(
+    String host,
+    int port, {
+    Duration? timeout,
+  }) => Socket.connect(host, port, timeout: timeout);
+
+  /// Default TLS upgrade for a real `dart:io` [Socket].
+  static Future<SecureSocket> defaultTcpSecure(
+    Socket socket, {
+    dynamic host,
+    List<String>? supportedProtocols,
+    bool Function(X509Certificate certificate)? onBadCertificate,
+  }) => SecureSocket.secure(
+    socket,
+    host: host,
+    supportedProtocols: supportedProtocols,
+    onBadCertificate: onBadCertificate,
+  );
 
   /// Flag controlling whether incoming/outgoing data is logged or not.
   final bool _logIncomingOutgoing;
+
+  /// How plain TCP sockets are opened (direct or proxied).
+  final TcpSocketConnect _connectSocket;
+
+  /// How plain sockets are upgraded to TLS.
+  final TcpSocketSecure _secureSocket;
 
   /// The underlying Socket/SecureSocket instance.
   Socket? _socket;
@@ -88,12 +136,12 @@ class TCPSocketWrapper extends BaseSocketWrapper {
         // Workaround: We cannot set the SNI directly when using SecureSocket.connect.
         // instead, we connect using a regular socket and then secure it. This allows
         // us to set the SNI to whatever we want.
-        final sock = await Socket.connect(
+        final sock = await _connectSocket(
           srv.target,
           srv.port,
           timeout: const Duration(seconds: 5),
         );
-        _socket = await SecureSocket.secure(
+        _socket = await _secureSocket(
           sock,
           host: domain,
           supportedProtocols: const [xmppClientALPNId],
@@ -127,7 +175,7 @@ class TCPSocketWrapper extends BaseSocketWrapper {
     for (final srv in results) {
       try {
         _log.finest('Attempting connection to ${srv.target}:${srv.port}...');
-        _socket = await Socket.connect(
+        _socket = await _connectSocket(
           srv.target,
           srv.port,
           timeout: const Duration(seconds: 5),
@@ -150,7 +198,7 @@ class TCPSocketWrapper extends BaseSocketWrapper {
   Future<bool> _hostPortConnect(String host, int port) async {
     try {
       _log.finest('Attempting fallback connection to $host:$port...');
-      _socket = await Socket.connect(
+      _socket = await _connectSocket(
         host,
         port,
         timeout: const Duration(seconds: 5),
@@ -188,8 +236,22 @@ class TCPSocketWrapper extends BaseSocketWrapper {
       // The socket is closed during the entire process
       _expectSocketClosure = true;
 
-      _socket = await SecureSocket.secure(
+      // Do NOT cancel [_socketSubscription] before securing. Cancelling the
+      // subscription on a dart:io [Socket] closes the socket, and the handshake
+      // below then fails with
+      //   HandshakeException: Connection terminated during handshake
+      // for every server that needs STARTTLS. Reproduced outside Flutter:
+      // cancelling first fails, leaving it alone succeeds. This was introduced
+      // by 906be01 (the WebSocket-transport commit, which never reaches this
+      // code), so plain TCP logins stopped working while nothing else changed.
+      // [_expectSocketClosure] plus the detach inside `SecureSocket.secure` is
+      // what master does, and it is enough; `_setupStreams` re-subscribes below.
+
+      // Pass [domain] as TLS host/SNI. Required when the TCP peer is a SOCKS
+      // proxy (remote address is 127.0.0.1) — same as direct-TLS connect above.
+      _socket = await _secureSocket(
         _socket!,
+        host: domain,
         supportedProtocols: const [xmppClientALPNId],
         onBadCertificate: (cert) => onBadCertificate(cert, domain),
       );
@@ -228,10 +290,27 @@ class TCPSocketWrapper extends BaseSocketWrapper {
       },
     );
     // ignore: implicit_dynamic_parameter
-    _socket!.done.then((_) {
-      _eventStream.add(XmppSocketClosureEvent(_expectSocketClosure));
-      _expectSocketClosure = false;
-    });
+    _socket!.done.then(
+      (_) {
+        _eventStream.add(XmppSocketClosureEvent(_expectSocketClosure));
+        _expectSocketClosure = false;
+      },
+      // A socket that fails completes [done] with that error *as well as*
+      // calling the subscription's `onError` above, and this future had no
+      // handler for it: the error escaped as an uncaught async error in the
+      // root zone and took the process down. `Unhandled Exception: TlsException
+      // ... BAD_DECRYPT` followed by "Lost connection to device" was a lost
+      // connection being reported twice — once handled, once fatal.
+      //
+      // Absorbed rather than reported again on purpose: the subscription's
+      // `onError` is the delivery path to the connection, and it has already
+      // run (`handleError` closes the socket and passes the failure to the
+      // reconnection policy, neither of which is idempotent). A second error
+      // event here would make one dead socket count as two failures.
+      onError: (Object error) {
+        _log.warning('socket ended with an error already reported: $error');
+      },
+    );
   }
 
   @override

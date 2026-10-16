@@ -80,13 +80,7 @@ abstract class BaseRosterStateManager {
     List<XmppRosterItem> modified,
     List<XmppRosterItem> added,
   ) async {
-    _sendEvent(
-      RosterUpdatedEvent(
-        removed,
-        modified,
-        added,
-      ),
-    );
+    _sendEvent(RosterUpdatedEvent(removed, modified, added));
 
     await commitRoster(version, removed, modified, added);
   }
@@ -97,7 +91,11 @@ abstract class BaseRosterStateManager {
     if (_currentRoster == null) {
       final result = await loadRosterCache();
 
-      _currentRoster = result.roster;
+      // Take a copy: a cache loader may hand back immutable or shared
+      // storage (TestingRosterStateManager returns the list it was
+      // constructed with, e.g. `const []`), while every later roster
+      // mutation — add, update, remove — edits this list in place.
+      _currentRoster = List<XmppRosterItem>.of(result.roster);
       _currentVersion = result.version;
     }
   }
@@ -108,38 +106,22 @@ abstract class BaseRosterStateManager {
     if (item.subscription == 'remove') {
       // The item has been removed
       _currentRoster!.removeWhere((i) => i.jid == item.jid);
-      return _RosterProcessTriple(
-        item.jid,
-        null,
-        null,
-      );
+      return _RosterProcessTriple(item.jid, null, null);
     }
 
     final index = _currentRoster!.indexWhere((i) => i.jid == item.jid);
     if (index == -1) {
       // The item does not exist
       _currentRoster!.add(item);
-      return _RosterProcessTriple(
-        null,
-        null,
-        item,
-      );
+      return _RosterProcessTriple(null, null, item);
     } else if (_currentRoster![index] != item) {
       // The item is updated
       _currentRoster![index] = item;
-      return _RosterProcessTriple(
-        null,
-        item,
-        null,
-      );
+      return _RosterProcessTriple(null, item, null);
     }
 
     // Item has not been modified or added
-    return const _RosterProcessTriple(
-      null,
-      null,
-      null,
-    );
+    return const _RosterProcessTriple(null, null, null);
   }
 
   /// Handles a roster push from the RosterManager.
@@ -151,26 +133,11 @@ abstract class BaseRosterStateManager {
       final result = _handleRosterItem(event.item);
 
       if (result.removed != null) {
-        return _commitRoster(
-          _currentVersion,
-          [result.removed!],
-          [],
-          [],
-        );
+        return _commitRoster(_currentVersion, [result.removed!], [], []);
       } else if (result.modified != null) {
-        return _commitRoster(
-          _currentVersion,
-          [],
-          [result.modified!],
-          [],
-        );
+        return _commitRoster(_currentVersion, [], [result.modified!], []);
       } else if (result.added != null) {
-        return _commitRoster(
-          _currentVersion,
-          [],
-          [],
-          [result.added!],
-        );
+        return _commitRoster(_currentVersion, [], [], [result.added!]);
       }
     });
   }
@@ -193,12 +160,7 @@ abstract class BaseRosterStateManager {
         if (result.added != null) added.add(result.added!);
       }
 
-      await _commitRoster(
-        _currentVersion,
-        removed,
-        modified,
-        added,
-      );
+      await _commitRoster(_currentVersion, removed, modified, added);
     });
   }
 
@@ -208,10 +170,7 @@ abstract class BaseRosterStateManager {
 
 @visibleForTesting
 class TestingRosterStateManager extends BaseRosterStateManager {
-  TestingRosterStateManager(
-    this.initialRosterVersion,
-    this.initialRoster,
-  );
+  TestingRosterStateManager(this.initialRosterVersion, this.initialRoster);
   final String? initialRosterVersion;
   final List<XmppRosterItem> initialRoster;
   int loadCount = 0;
@@ -219,10 +178,7 @@ class TestingRosterStateManager extends BaseRosterStateManager {
   @override
   Future<RosterCacheLoadResult> loadRosterCache() async {
     loadCount++;
-    return RosterCacheLoadResult(
-      initialRosterVersion,
-      initialRoster,
-    );
+    return RosterCacheLoadResult(initialRosterVersion, initialRoster);
   }
 
   @override

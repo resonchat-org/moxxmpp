@@ -77,8 +77,8 @@ class RosterPushResult {
 /// A Stub feature negotiator for finding out whether roster versioning is supported.
 class RosterFeatureNegotiator extends XmppFeatureNegotiatorBase {
   RosterFeatureNegotiator()
-      : _supported = false,
-        super(11, false, rosterVersioningXmlns, rosterNegotiator);
+    : _supported = false,
+      super(11, false, rosterVersioningXmlns, rosterNegotiator);
 
   /// True if rosterVersioning is supported. False otherwise.
   bool _supported;
@@ -117,13 +117,13 @@ class RosterManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'iq',
-          tagName: 'query',
-          tagXmlns: rosterXmlns,
-          callback: _onRosterPush,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'iq',
+      tagName: 'query',
+      tagXmlns: rosterXmlns,
+      callback: _onRosterPush,
+    ),
+  ];
 
   @override
   Future<bool> isSupported() async => true;
@@ -148,7 +148,22 @@ class RosterManager extends XmppManagerBase {
       return state..done = true;
     }
 
-    final query = stanza.firstTag('query', xmlns: rosterXmlns)!;
+    // The stanza handler matched on a <query> in the roster namespace, but
+    // that match and firstTag() do not always resolve namespaces the same
+    // way (an inherited declaration is invisible to the latter). Dereferencing
+    // the result therefore crashed the whole connection handler on a
+    // perfectly ordinary push. Fall back to a name-only lookup, and tolerate
+    // its absence.
+    final query =
+        stanza.firstTag('query', xmlns: rosterXmlns) ??
+        stanza.children.where((c) => c.tag == 'query').firstOrNull;
+    if (query == null) {
+      logger.warning(
+        'Roster push without a <query> element: ${stanza.toXml()}',
+      );
+      return state..done = true;
+    }
+
     logger.fine('Roster push: ${query.toXml()}');
     final item = query.firstTag('item');
 
@@ -171,11 +186,7 @@ class RosterManager extends XmppManagerBase {
       ),
     );
 
-    await reply(
-      state,
-      'result',
-      [],
-    );
+    await reply(state, 'result', []);
 
     return state..done = true;
   }
@@ -216,12 +227,7 @@ class RosterManager extends XmppManagerBase {
       rosterVersion = query.attributes['ver'] as String?;
     } else if (requestedRosterVersion != null) {
       // Skip the handleRosterFetch call since nothing changed.
-      return Result(
-        RosterRequestResult(
-          [],
-          requestedRosterVersion,
-        ),
-      );
+      return Result(RosterRequestResult([], requestedRosterVersion));
     } else {
       logger.warning(
         'Server response to roster request without roster versioning does not contain a <query /> element, while the type is not error. This violates RFC6121',
@@ -229,14 +235,9 @@ class RosterManager extends XmppManagerBase {
       return Result(NoQueryError());
     }
 
-    final result = RosterRequestResult(
-      items,
-      rosterVersion,
-    );
+    final result = RosterRequestResult(items, rosterVersion);
 
-    unawaited(
-      _stateManager.handleRosterFetch(result),
-    );
+    unawaited(_stateManager.handleRosterFetch(result));
 
     return Result(result);
   }
@@ -248,10 +249,7 @@ class RosterManager extends XmppManagerBase {
     bool useRosterVersion = true,
   }) async {
     final attrs = getAttributes();
-    final query = XMLNode.xmlns(
-      tag: 'query',
-      xmlns: rosterXmlns,
-    );
+    final query = XMLNode.xmlns(tag: 'query', xmlns: rosterXmlns);
     final rosterVersion = await _stateManager.getRosterVersion();
     if (rosterVersion != null &&
         rosterVersioningAvailable() &&
@@ -260,14 +258,7 @@ class RosterManager extends XmppManagerBase {
     }
 
     final response = (await attrs.sendStanza(
-      StanzaDetails(
-        Stanza.iq(
-          type: 'get',
-          children: [
-            query,
-          ],
-        ),
-      ),
+      StanzaDetails(Stanza.iq(type: 'get', children: [query])),
     ))!;
 
     if (response.attributes['type'] != 'result') {
@@ -282,7 +273,7 @@ class RosterManager extends XmppManagerBase {
   /// Requests a series of roster pushes according to RFC6121. Requires that the server
   /// advertises urn:xmpp:features:rosterver in the stream features.
   Future<Result<RosterRequestResult?, RosterError>>
-      requestRosterPushes() async {
+  requestRosterPushes() async {
     final attrs = getAttributes();
     final rosterVersion = await _stateManager.getRosterVersion();
     final result = (await attrs.sendStanza(
@@ -293,9 +284,7 @@ class RosterManager extends XmppManagerBase {
             XMLNode.xmlns(
               tag: 'query',
               xmlns: rosterXmlns,
-              attributes: {
-                'ver': rosterVersion ?? '',
-              },
+              attributes: {'ver': rosterVersion ?? ''},
             ),
           ],
         ),
@@ -312,9 +301,12 @@ class RosterManager extends XmppManagerBase {
   }
 
   bool rosterVersioningAvailable() {
-    return getAttributes()
-        .getNegotiatorById<RosterFeatureNegotiator>(rosterNegotiator)!
-        .isSupported;
+    // The negotiator is optional: a caller may simply not have registered
+    // it. Treating that as "not supported" is correct, and far better than
+    // throwing a null-check error out of requestRoster().
+    final negotiator = getAttributes()
+        .getNegotiatorById<RosterFeatureNegotiator>(rosterNegotiator);
+    return negotiator?.isSupported ?? false;
   }
 
   /// Attempts to add [jid] with a title of [title] and groups [groups] to the roster.
@@ -374,10 +366,7 @@ class RosterManager extends XmppManagerBase {
               children: [
                 XMLNode(
                   tag: 'item',
-                  attributes: {
-                    'jid': jid,
-                    'subscription': 'remove',
-                  },
+                  attributes: {'jid': jid, 'subscription': 'remove'},
                 ),
               ],
             ),

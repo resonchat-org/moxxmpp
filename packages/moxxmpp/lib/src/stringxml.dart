@@ -1,5 +1,22 @@
 import 'package:xml/xml.dart';
 
+/// Escapes [value] for use as element text.
+///
+/// The XML here is built by string concatenation (see [XMLNode.toXml]), and
+/// nothing escaped it: any value containing `&`, `<` or `>` produced a stanza
+/// the server answers with `not-well-formed`, which tears the whole stream down.
+///
+/// Values like that are not exotic. A message body may contain `&`, and a pubsub
+/// node configuration form sends the server's own fields back, labels included.
+String _escapeText(String value) => value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+
+/// Escapes [value] for use as a single-quoted attribute value.
+String _escapeAttribute(String value) =>
+    _escapeText(value).replaceAll("'", '&apos;').replaceAll('"', '&quot;');
+
 class XMLNode {
   XMLNode({
     required this.tag,
@@ -16,8 +33,8 @@ class XMLNode {
     this.children = const [],
     this.closeTag = true,
     this.text,
-  })  : attributes = <String, String>{'xmlns': xmlns, ...attributes},
-        isDeclaration = false;
+  }) : attributes = <String, String>{'xmlns': xmlns, ...attributes},
+       isDeclaration = false;
 
   /// Because this API is better ;)
   /// Don't use in production. Just for testing
@@ -38,17 +55,17 @@ class XMLNode {
       return XMLNode(
         tag: element.name.qualified,
         attributes: attributes,
-        children:
-            element.childElements.toList().map(XMLNode.fromXmlElement).toList(),
+        children: element.childElements
+            .toList()
+            .map(XMLNode.fromXmlElement)
+            .toList(),
       );
     }
   }
 
   /// Just for testing purposes
   factory XMLNode.fromString(String str) {
-    return XMLNode.fromXmlElement(
-      XmlDocument.parse(str).firstElementChild!,
-    );
+    return XMLNode.fromXmlElement(XmlDocument.parse(str).firstElementChild!);
   }
   final String tag;
   Map<String, dynamic> attributes;
@@ -64,18 +81,20 @@ class XMLNode {
 
   /// Renders the attributes of the node into "attr1=\"value\" attr2=...".
   String renderAttributes() {
-    return attributes.keys.map((String key) {
-      final dynamic value = attributes[key];
-      assert(
-        value is String || value is int,
-        'XML values must either be string or int',
-      );
-      if (value is String) {
-        return "$key='$value'";
-      } else {
-        return '$key=$value';
-      }
-    }).join(' ');
+    return attributes.keys
+        .map((String key) {
+          final dynamic value = attributes[key];
+          assert(
+            value is String || value is int,
+            'XML values must either be string or int',
+          );
+          if (value is String) {
+            return "$key='${_escapeAttribute(value)}'";
+          } else {
+            return '$key=$value';
+          }
+        })
+        .join(' ');
   }
 
   /// Renders the entire node, including its children, into an XML string.
@@ -84,7 +103,7 @@ class XMLNode {
     if (children.isEmpty) {
       if (text != null && text!.isNotEmpty) {
         final attrString = attributes.isEmpty ? '' : ' ${renderAttributes()}';
-        return '<$tag$attrString>$text</$tag>';
+        return '<$tag$attrString>${_escapeText(text!)}</$tag>';
       } else {
         return '<$decl$tag ${renderAttributes()}${closeTag ? " />" : "$decl>"}';
       }
@@ -130,8 +149,9 @@ class XMLNode {
   /// Returns all children whose tag is equal to [tag].
   List<XMLNode> findTags(String tag, {String? xmlns}) {
     return children.where((element) {
-      final xmlnsMatches =
-          xmlns != null ? element.attributes['xmlns'] == xmlns : true;
+      final xmlnsMatches = xmlns != null
+          ? element.attributes['xmlns'] == xmlns
+          : true;
       return element.tag == tag && xmlnsMatches;
     }).toList();
   }

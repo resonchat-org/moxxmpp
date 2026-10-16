@@ -3,6 +3,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/message.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/stanza.dart';
@@ -41,9 +42,7 @@ class StatelessFileSharingUrlSource extends StatelessFileSharingSource {
     return XMLNode.xmlns(
       tag: 'url-data',
       xmlns: urlDataXmlns,
-      attributes: <String, String>{
-        'target': url,
-      },
+      attributes: <String, String>{'target': url},
     );
   }
 }
@@ -115,9 +114,10 @@ class StatelessFileSharingData implements StanzaHandlerExtension {
 
   StatelessFileSharingUrlSource? getFirstUrlSource() {
     return sources.firstWhereOrNull(
-      (StatelessFileSharingSource source) =>
-          source is StatelessFileSharingUrlSource,
-    ) as StatelessFileSharingUrlSource?;
+          (StatelessFileSharingSource source) =>
+              source is StatelessFileSharingUrlSource,
+        )
+        as StatelessFileSharingUrlSource?;
   }
 }
 
@@ -126,15 +126,15 @@ class SFSManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagName: 'file-sharing',
-          tagXmlns: sfsXmlns,
-          callback: _onMessage,
-          // Before the message handler
-          priority: -98,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagName: 'file-sharing',
+      tagXmlns: sfsXmlns,
+      callback: _onMessage,
+      // Before the message handler
+      priority: messageExtensionLatePriority,
+    ),
+  ];
 
   @override
   Future<bool> isSupported() async => true;
@@ -170,10 +170,7 @@ class SFSManager extends XmppManagerBase {
   ) async {
     final sfs = message.firstTag('file-sharing', xmlns: sfsXmlns)!;
 
-    return state
-      ..extensions.set(
-        StatelessFileSharingData.fromXML(sfs),
-      );
+    return state..extensions.set(StatelessFileSharingData.fromXML(sfs));
   }
 
   @override

@@ -10,14 +10,13 @@ enum _StartTlsState { ready, requested }
 class StartTLSFailedError extends NegotiatorError {
   @override
   bool isRecoverable() => true;
+
+  @override
+  String toString() => 'StartTLS failed';
 }
 
 class StartTLSNonza extends XMLNode {
-  StartTLSNonza()
-      : super.xmlns(
-          tag: 'starttls',
-          xmlns: startTlsXmlns,
-        );
+  StartTLSNonza() : super.xmlns(tag: 'starttls', xmlns: startTlsXmlns);
 }
 
 /// A negotiator implementing StartTLS.
@@ -29,6 +28,13 @@ class StartTlsNegotiator extends XmppFeatureNegotiatorBase {
 
   /// Logger.
   final Logger _log = Logger('StartTlsNegotiator');
+
+  @override
+  bool matchesFeature(List<XMLNode> features) {
+    // RFC 7395 / WSS already provides TLS at the transport layer.
+    if (attributes.getSocket().isSecure()) return false;
+    return super.matchesFeature(features);
+  }
 
   @override
   Future<Result<NegotiatorState, NegotiatorError>> negotiate(
@@ -48,9 +54,9 @@ class StartTlsNegotiator extends XmppFeatureNegotiatorBase {
         }
 
         _log.fine('Securing socket');
-        final result = await attributes
-            .getSocket()
-            .secure(attributes.getConnectionSettings().jid.domain);
+        final result = await attributes.getSocket().secure(
+          attributes.getConnectionSettings().jid.domain,
+        );
         if (!result) {
           _log.severe('Failed to secure stream');
           return Result(StartTLSFailedError());

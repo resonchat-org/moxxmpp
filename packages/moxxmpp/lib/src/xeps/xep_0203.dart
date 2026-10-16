@@ -4,6 +4,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/stanza.dart';
 
@@ -26,14 +27,14 @@ class DelayedDeliveryManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagName: 'delay',
-          tagXmlns: delayedDeliveryXmlns,
-          callback: _onIncomingMessage,
-          priority: 200,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagName: 'delay',
+      tagXmlns: delayedDeliveryXmlns,
+      callback: _onIncomingMessage,
+      priority: delayedDeliveryPriority,
+    ),
+  ];
 
   Future<StanzaHandlerData> _onIncomingMessage(
     Stanza stanza,

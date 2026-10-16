@@ -17,10 +17,7 @@ import 'package:moxxmpp/src/xeps/xep_0060/errors.dart';
 import 'package:moxxmpp/src/xeps/xep_0060/helpers.dart';
 
 class PubSubPublishOptions {
-  const PubSubPublishOptions({
-    this.accessModel,
-    this.maxItems,
-  });
+  const PubSubPublishOptions({this.accessModel, this.maxItems});
   final String? accessModel;
   final String? maxItems;
 
@@ -76,13 +73,13 @@ class PubSubManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagName: 'event',
-          tagXmlns: pubsubEventXmlns,
-          callback: _onPubsubMessage,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagName: 'event',
+      tagXmlns: pubsubEventXmlns,
+      callback: _onPubsubMessage,
+    ),
+  ];
 
   @override
   Future<bool> isSupported() async => true;
@@ -93,19 +90,56 @@ class PubSubManager extends XmppManagerBase {
   ) async {
     logger.finest('Received PubSub event');
     final event = message.firstTag('event', xmlns: pubsubEventXmlns)!;
-    final items = event.firstTag('items')!;
-    final item = items.firstTag('item')!;
+    final from = message.attributes['from']! as String;
 
-    getAttributes().sendEvent(
-      PubSubNotificationEvent(
-        item: PubSubItem(
-          id: item.attributes['id']! as String,
-          node: items.attributes['node']! as String,
-          payload: item.children[0],
+    // Node deleted / purged — no items payload.
+    final delete = event.firstTag('delete');
+    if (delete != null) {
+      getAttributes().sendEvent(
+        PubSubNodeDeletedEvent(
+          node: delete.attributes['node']! as String,
+          from: from,
         ),
-        from: message.attributes['from']! as String,
-      ),
-    );
+      );
+      return state..done = true;
+    }
+    final purge = event.firstTag('purge');
+    if (purge != null) {
+      getAttributes().sendEvent(
+        PubSubNodePurgedEvent(
+          node: purge.attributes['node']! as String,
+          from: from,
+        ),
+      );
+      return state..done = true;
+    }
+
+    final items = event.firstTag('items');
+    if (items == null) return state..done = true;
+    final node = items.attributes['node']! as String;
+
+    // XEP-0060 retract notifications (used by XEP-0402 bookmark removal).
+    for (final retract in items.findTags('retract')) {
+      final id = retract.attributes['id'] as String?;
+      if (id == null) continue;
+      getAttributes().sendEvent(
+        PubSubRetractEvent(node: node, id: id, from: from),
+      );
+    }
+
+    for (final item in items.findTags('item')) {
+      if (item.children.isEmpty) continue;
+      getAttributes().sendEvent(
+        PubSubNotificationEvent(
+          item: PubSubItem(
+            id: item.attributes['id']! as String,
+            node: node,
+            payload: item.children[0],
+          ),
+          from: from,
+        ),
+      );
+    }
 
     return state..done = true;
   }
@@ -145,17 +179,17 @@ class PubSubManager extends XmppManagerBase {
         }
       }
 
-      final nodeMultiItemsSupported = result.isType<DiscoInfo>() &&
+      final nodeMultiItemsSupported =
+          result.isType<DiscoInfo>() &&
           result.get<DiscoInfo>().features.contains(pubsubNodeConfigMultiItems);
-      final nodeMaxSupported = result.isType<DiscoInfo>() &&
+      final nodeMaxSupported =
+          result.isType<DiscoInfo>() &&
           result.get<DiscoInfo>().features.contains(pubsubNodeConfigMax);
       if (options.maxItems != null && !nodeMultiItemsSupported) {
         // TODO(PapaTutuWawa): Here, we need to admit defeat
         logger.finest('PubSub host does not support multi-items!');
 
-        return PubSubPublishOptions(
-          accessModel: options.accessModel,
-        );
+        return PubSubPublishOptions(accessModel: options.accessModel);
       } else if (options.maxItems == 'max' && !nodeMaxSupported) {
         logger.finest(
           'PubSub host does not support node-config-max. Working around it',
@@ -269,13 +303,7 @@ class PubSubManager extends XmppManagerBase {
     String? id,
     PubSubPublishOptions? options,
   }) async {
-    return _publish(
-      jid,
-      node,
-      payload,
-      id: id,
-      options: options,
-    );
+    return _publish(jid, node, payload, id: id, options: options);
   }
 
   Future<Result<PubSubError, bool>> _publish(
@@ -308,9 +336,7 @@ class PubSubManager extends XmppManagerBase {
                   children: [
                     XMLNode(
                       tag: 'item',
-                      attributes: {
-                        if (id != null) 'id': id,
-                      },
+                      attributes: {if (id != null) 'id': id},
                       children: [payload],
                     ),
                   ],
@@ -515,9 +541,7 @@ class PubSubManager extends XmppManagerBase {
               children: [
                 XMLNode(
                   tag: 'configure',
-                  attributes: <String, String>{
-                    'node': node,
-                  },
+                  attributes: <String, String>{'node': node},
                 ),
               ],
             ),
@@ -529,6 +553,39 @@ class PubSubManager extends XmppManagerBase {
     if (form.attributes['type'] != 'result') {
       return Result(getPubSubError(form));
     }
+
+    // Submit the *server's own* configuration form, with only the fields we
+    // care about changed. Two things make the hand-built form that used to be
+    // sent here wrong:
+    //
+    //  - FORM_TYPE. A node configuration is `pubsub#node_config`;
+    //    `PubSubPublishOptions.toXml()` writes `pubsub#publish-options`,
+    //    because that is the form a *publish* carries. Servers reject a
+    //    `pubsub#owner#configure` whose FORM_TYPE is the publish-options one,
+    //    so the reconfiguration silently did nothing and the node kept the
+    //    access model it was created with.
+    //  - Completeness. A `configure` submission replaces the whole
+    //    configuration. Sending only `access_model` / `max_items` resets every
+    //    other field to its default, which is why this has to start from the
+    //    form the server just gave us rather than from scratch.
+    //
+    // This is what Conversations' `pushNodeConfiguration` does, and the failure
+    // it prevents is a node that is readable by its owner but not by anyone
+    // else — our own probes read our bundles and report them present while a
+    // real peer cannot fetch them at all.
+    // The `x` is not a child of the IQ: the response nests it as
+    // `iq > pubsub > configure > x`, and `firstTag` only looks at direct
+    // children, so it has to be walked down to.
+    final x = form
+        .firstTag('pubsub', xmlns: pubsubOwnerXmlns)
+        ?.firstTag('configure')
+        ?.firstTag('x', xmlns: dataFormsXmlns);
+    if (x == null) {
+      return Result(UnknownPubSubError());
+    }
+    x.attributes['type'] = 'submit';
+    _setFormFieldValue(x, 'pubsub#access_model', options.accessModel);
+    _setFormFieldValue(x, 'pubsub#max_items', options.maxItems);
 
     final submit = (await attrs.sendStanza(
       StanzaDetails(
@@ -542,12 +599,8 @@ class PubSubManager extends XmppManagerBase {
               children: [
                 XMLNode(
                   tag: 'configure',
-                  attributes: <String, String>{
-                    'node': node,
-                  },
-                  children: [
-                    options.toXml(),
-                  ],
+                  attributes: <String, String>{'node': node},
+                  children: [x],
                 ),
               ],
             ),
@@ -557,10 +610,36 @@ class PubSubManager extends XmppManagerBase {
       ),
     ))!;
     if (submit.attributes['type'] != 'result') {
-      return Result(getPubSubError(form));
+      return Result(getPubSubError(submit));
     }
 
     return const Result(true);
+  }
+
+  /// Sets the value of the field with `var` equal to [varAttr] in the data
+  /// form [x], adding the field when the server did not include it.
+  ///
+  /// A field carries its value in one or more `<value/>` children; `type` and
+  /// `var` live in attributes and must be preserved, so the field itself is
+  /// edited in place rather than replaced. [value] being null means "do not
+  /// touch this field", not "clear it".
+  void _setFormFieldValue(XMLNode x, String varAttr, String? value) {
+    if (value == null) return;
+
+    for (final field in x.findTags('field')) {
+      if (field.attributes['var'] != varAttr) continue;
+      field.children.removeWhere((child) => child.tag == 'value');
+      field.children.add(XMLNode(tag: 'value', text: value));
+      return;
+    }
+
+    x.children.add(
+      XMLNode(
+        tag: 'field',
+        attributes: <String, dynamic>{'var': varAttr},
+        children: [XMLNode(tag: 'value', text: value)],
+      ),
+    );
   }
 
   Future<Result<PubSubError, bool>> delete(JID host, String node) async {
@@ -576,9 +655,7 @@ class PubSubManager extends XmppManagerBase {
               children: [
                 XMLNode(
                   tag: 'delete',
-                  attributes: <String, String>{
-                    'node': node,
-                  },
+                  attributes: <String, String>{'node': node},
                 ),
               ],
             ),
@@ -613,15 +690,11 @@ class PubSubManager extends XmppManagerBase {
               children: [
                 XMLNode(
                   tag: 'retract',
-                  attributes: <String, String>{
-                    'node': node,
-                  },
+                  attributes: <String, String>{'node': node},
                   children: [
                     XMLNode(
                       tag: 'item',
-                      attributes: <String, String>{
-                        'id': itemId,
-                      },
+                      attributes: <String, String>{'id': itemId},
                     ),
                   ],
                 ),

@@ -4,6 +4,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/message.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/stanza.dart';
@@ -21,10 +22,7 @@ class MessageDeliveryReceiptData implements StanzaHandlerExtension {
       receiptRequested,
       'This method makes little sense with receiptRequested == false',
     );
-    return XMLNode.xmlns(
-      tag: 'request',
-      xmlns: deliveryXmlns,
-    );
+    return XMLNode.xmlns(tag: 'request', xmlns: deliveryXmlns);
   }
 }
 
@@ -51,23 +49,23 @@ class MessageDeliveryReceiptManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagName: 'received',
-          tagXmlns: deliveryXmlns,
-          callback: _onDeliveryReceiptReceived,
-          // Before the message handler
-          priority: -99,
-        ),
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagName: 'request',
-          tagXmlns: deliveryXmlns,
-          callback: _onDeliveryRequestReceived,
-          // Before the message handler
-          priority: -99,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagName: 'received',
+      tagXmlns: deliveryXmlns,
+      callback: _onDeliveryReceiptReceived,
+      // Before the message handler
+      priority: messageExtensionPriority,
+    ),
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagName: 'request',
+      tagXmlns: deliveryXmlns,
+      callback: _onDeliveryRequestReceived,
+      // Before the message handler
+      priority: messageExtensionPriority,
+    ),
+  ];
 
   @override
   Future<bool> isSupported() async => true;
@@ -107,12 +105,17 @@ class MessageDeliveryReceiptManager extends XmppManagerBase {
   List<XMLNode> _messageSendingCallback(
     TypedMap<StanzaHandlerExtension> extensions,
   ) {
-    final data = extensions.get<MessageDeliveryReceivedData>();
-    return data != null
-        ? [
-            data.toXML(),
-          ]
-        : [];
+    final nodes = <XMLNode>[];
+    final received = extensions.get<MessageDeliveryReceivedData>();
+    if (received != null) {
+      nodes.add(received.toXML());
+    }
+    // Outgoing `<request/>` (Conversations MessageGenerator.preparePacket).
+    final request = extensions.get<MessageDeliveryReceiptData>();
+    if (request != null && request.receiptRequested) {
+      nodes.add(request.toXML());
+    }
+    return nodes;
   }
 
   @override

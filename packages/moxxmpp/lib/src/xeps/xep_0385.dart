@@ -2,6 +2,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/stanza.dart';
 import 'package:moxxmpp/src/stringxml.dart';
@@ -36,8 +37,9 @@ StatelessMediaSharingData parseSIMSElement(XMLNode node) {
   }
 
   var url = '';
-  final references =
-      file.firstTag('sources')!.findTags('reference', xmlns: referenceXmlns);
+  final references = file
+      .firstTag('sources')!
+      .findTags('reference', xmlns: referenceXmlns);
   for (final i in references) {
     if (i.attributes['type'] != 'data') continue;
 
@@ -50,8 +52,10 @@ StatelessMediaSharingData parseSIMSElement(XMLNode node) {
 
   // Thumbnails
   final thumbnails = List<JingleContentThumbnail>.empty(growable: true);
-  for (final i
-      in file.findTags('thumbnail', xmlns: jingleContentThumbnailXmlns)) {
+  for (final i in file.findTags(
+    'thumbnail',
+    xmlns: jingleContentThumbnailXmlns,
+  )) {
     thumbnails.add(JingleContentThumbnail.fromXML(i));
   }
 
@@ -75,15 +79,15 @@ class SIMSManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          callback: _onMessage,
-          tagName: 'reference',
-          tagXmlns: referenceXmlns,
-          // Before the message handler
-          priority: -99,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      callback: _onMessage,
+      tagName: 'reference',
+      tagXmlns: referenceXmlns,
+      // Before the message handler
+      priority: messageExtensionPriority,
+    ),
+  ];
 
   @override
   Future<bool> isSupported() async => true;

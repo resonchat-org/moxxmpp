@@ -6,6 +6,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/presence.dart';
 import 'package:moxxmpp/src/stanza.dart';
@@ -43,29 +44,39 @@ class MUCManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          callback: _onMessage,
-          // Before the message handler
-          priority: -99,
-        ),
-        StanzaHandler(
-          stanzaTag: 'presence',
-          callback: _onPresence,
-          tagName: 'x',
-          tagXmlns: mucUserXmlns,
-          // Before the PresenceManager
-          priority: PresenceManager.presenceHandlerPriority + 1,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      callback: _onMessage,
+      // Before the message handler
+      priority: messageExtensionPriority,
+    ),
+    StanzaHandler(
+      stanzaTag: 'presence',
+      callback: _onPresence,
+      tagName: 'x',
+      tagXmlns: mucUserXmlns,
+      // Before the PresenceManager
+      priority: presenceExtensionPriority,
+    ),
+    // A refusal is a presence *error*, and an error presence carries no
+    // <x xmlns='http://jabber.org/protocol/muc#user'/> — it carries an
+    // <error/> instead. So the handler above never sees it, the join's
+    // completer is never completed, and every refusal (nickname taken,
+    // password required, banned, room full) looks exactly like a service
+    // that simply did not answer. Those are very different things to show a
+    // user, so errors get their own handler.
+    StanzaHandler(
+      stanzaTag: 'presence',
+      callback: _onPresenceError,
+      tagName: 'error',
+      priority: presenceExtensionPriority,
+    ),
+  ];
 
   @override
   List<StanzaHandler> getOutgoingPreStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          callback: _onMessageSent,
-        ),
-      ];
+    StanzaHandler(stanzaTag: 'message', callback: _onMessageSent),
+  ];
 
   @override
   Future<void> onXmppEvent(XmppEvent event) async {
@@ -94,11 +105,7 @@ class MUCManager extends XmppManagerBase {
 
     for (final join in mucJoins) {
       final (jid, nick) = join;
-      await _sendMucJoin(
-        jid,
-        nick,
-        0,
-      );
+      await _sendMucJoin(jid, nick, 0);
     }
     _joinedPreparedRooms = true;
   }
@@ -106,10 +113,7 @@ class MUCManager extends XmppManagerBase {
   /// Prepares the internal room list to ensure that the rooms
   /// [rooms] are joined once we are connected.
   Future<void> prepareRoomList(List<MUCRoomJoin> rooms) async {
-    assert(
-      rooms.isNotEmpty,
-      'The room list should not be empty',
-    );
+    assert(rooms.isNotEmpty, 'The room list should not be empty');
 
     await _cacheLock.synchronized(() {
       _joinedPreparedRooms = false;
@@ -164,20 +168,18 @@ class MUCManager extends XmppManagerBase {
       return Result(NoNicknameSpecified());
     }
 
-    final completer =
-        await _cacheLock.synchronized<Completer<Result<bool, MUCError>>>(
-      () {
-        _mucRoomCache[roomJid] = RoomState(
-          roomJid: roomJid,
-          nick: nick,
-          joined: false,
-        );
+    final completer = await _cacheLock
+        .synchronized<Completer<Result<bool, MUCError>>>(() {
+          _mucRoomCache[roomJid] = RoomState(
+            roomJid: roomJid,
+            nick: nick,
+            joined: false,
+          );
 
-        final completer = Completer<Result<bool, MUCError>>();
-        _mucRoomJoinCompleter[roomJid] = completer;
-        return completer;
-      },
-    );
+          final completer = Completer<Result<bool, MUCError>>();
+          _mucRoomJoinCompleter[roomJid] = completer;
+          return completer;
+        });
 
     await _sendMucJoin(roomJid, nick, maxHistoryStanzas);
     return completer.future;
@@ -200,9 +202,7 @@ class MUCManager extends XmppManagerBase {
                 if (maxHistoryStanzas != null)
                   XMLNode(
                     tag: 'history',
-                    attributes: {
-                      'maxstanzas': maxHistoryStanzas.toString(),
-                    },
+                    attributes: {'maxstanzas': maxHistoryStanzas.toString()},
                   ),
               ],
             ),
@@ -219,9 +219,7 @@ class MUCManager extends XmppManagerBase {
   /// Removes the corresponding room entry from the cache. Returns a [Result]
   /// with a boolean value indicating success or failure, or an [MUCError]
   /// if applicable.
-  Future<Result<bool, MUCError>> leaveRoom(
-    JID roomJid,
-  ) async {
+  Future<Result<bool, MUCError>> leaveRoom(JID roomJid) async {
     final nick = await _cacheLock.synchronized(() {
       final nick = _mucRoomCache[roomJid]?.nick;
       _mucRoomCache.remove(roomJid);
@@ -244,6 +242,77 @@ class MUCManager extends XmppManagerBase {
 
   Future<RoomState?> getRoomState(JID roomJid) async {
     return _cacheLock.synchronized(() => _mucRoomCache[roomJid]);
+  }
+
+  /// Sets the room subject (Conversations `MultiUserChatManager.setSubject`).
+  ///
+  /// Sends a `groupchat` message with a `<subject/>` child and no body.
+  /// Encryption is disabled: subject is room metadata, not chat content.
+  Future<void> setSubject(JID roomJid, String subject) async {
+    await getAttributes().sendStanza(
+      StanzaDetails(
+        Stanza.message(
+          to: roomJid.toBare().toString(),
+          type: 'groupchat',
+          children: [XMLNode(tag: 'subject', text: subject)],
+        ),
+        awaitable: false,
+        shouldEncrypt: false,
+      ),
+    );
+  }
+
+  /// Handles a presence *error* from a room we are trying to join.
+  ///
+  /// Split out of `_onPresence` because the error presence has no muc#user
+  /// `<x/>`, so the handler registered for that tag never sees it. Keeping the
+  /// branch inside that handler meant it was dead code, and a dead branch here
+  /// is not a warning: every refusal silently became a join that never
+  /// completes.
+  Future<StanzaHandlerData> _onPresenceError(
+    Stanza presence,
+    StanzaHandlerData state,
+  ) async {
+    final from = presence.from;
+    if (from == null) return state;
+    final bareFrom = JID.fromString(from).toBare();
+    return _cacheLock.synchronized(() {
+      // Only failures of a join we are waiting on matter. Presence errors from
+      // elsewhere on the server are not ours to resolve.
+      if (_mucRoomCache[bareFrom] == null) return state;
+      final completer = _mucRoomJoinCompleter[bareFrom];
+      if (completer == null || completer.isCompleted) return state;
+
+      final errorTag = presence.firstTag('error');
+      final condition = errorTag == null
+          ? null
+          : errorTag.firstTagByXmlns(fullStanzaXmlns)?.tag;
+      final Result<bool, MUCError> result;
+      switch (condition) {
+        case 'forbidden':
+          result = Result(JoinForbiddenError());
+        case 'not-authorized':
+          // Distinguished from `forbidden` because they need different
+          // sentences: one means "you are not allowed", the other "you need a
+          // password this client does not handle".
+          result = Result(PasswordRequiredError());
+        case 'conflict':
+          result = Result(NicknameTakenError());
+        case 'not-allowed':
+          result = Result(BannedFromRoomError());
+        case 'item-not-found':
+          result = Result(RoomNotFoundError());
+        case 'service-unavailable':
+          result = Result(RoomFullError());
+        default:
+          result = Result(MUCUnspecificError());
+      }
+
+      _mucRoomCache.remove(bareFrom);
+      completer.complete(result);
+      _mucRoomJoinCompleter.remove(bareFrom);
+      return StanzaHandlerData(true, false, presence, state.extensions);
+    });
   }
 
   Future<StanzaHandlerData> _onPresence(
@@ -271,39 +340,22 @@ class MUCManager extends XmppManagerBase {
         return state;
       }
 
-      if (presence.type == 'error') {
-        final errorTag = presence.firstTag('error')!;
-        final error = errorTag.firstTagByXmlns(fullStanzaXmlns)!;
-        Result<bool, MUCError> result;
-        if (error.tag == 'forbidden') {
-          result = Result(JoinForbiddenError());
-        } else {
-          result = Result(MUCUnspecificError());
-        }
-
-        _mucRoomCache.remove(bareFrom);
-        _mucRoomJoinCompleter[bareFrom]!.complete(result);
-        _mucRoomJoinCompleter.remove(bareFrom);
-        return StanzaHandlerData(
-          true,
-          false,
-          presence,
-          state.extensions,
-        );
-      }
-
       final x = presence.firstTag('x', xmlns: mucUserXmlns)!;
       final item = x.firstTag('item')!;
       final statuses = x
           .findTags('status')
           .map((s) => s.attributes['code']! as String)
           .toList();
-      final role = Role.fromString(
-        item.attributes['role']! as String,
-      );
+      final role = Role.fromString(item.attributes['role']! as String);
       final affiliation = Affiliation.fromString(
         item.attributes['affiliation']! as String,
       );
+
+      // Gajim GroupchatParticipant: availability + <show/> from MUC presence.
+      final unavailable = presence.attributes['type'] == 'unavailable';
+      final show = unavailable
+          ? null
+          : PresenceShow.parse(presence.firstTag('show')?.innerText());
 
       if (statuses.contains(selfPresenceStatus)) {
         if (room.joined) {
@@ -312,12 +364,7 @@ class MUCManager extends XmppManagerBase {
               room.role != role) {
             // Notify us of the changed data.
             getAttributes().sendEvent(
-              OwnDataChangedEvent(
-                bareFrom,
-                from.resource,
-                affiliation,
-                role,
-              ),
+              OwnDataChangedEvent(bareFrom, from.resource, affiliation, role),
             );
           }
         }
@@ -327,16 +374,28 @@ class MUCManager extends XmppManagerBase {
           ..nick = from.resource
           ..affiliation = affiliation
           ..role = role;
-        logger.finest('Self-presence handled');
-        return StanzaHandlerData(
-          true,
-          false,
-          presence,
-          state.extensions,
+        // Keep self in the roster (with show) like other clients.
+        final selfMember = RoomMember(
+          from.resource,
+          affiliation,
+          role,
+          realJid: _realJidOf(item),
+          show: show,
         );
+        if (!unavailable || role != Role.none) {
+          room.members[from.resource] = selfMember;
+          if (room.joined) {
+            // So <show/> changes republish the member list.
+            getAttributes().sendEvent(MemberChangedEvent(bareFrom, selfMember));
+          }
+        } else {
+          room.members.remove(from.resource);
+        }
+        logger.finest('Self-presence handled');
+        return StanzaHandlerData(true, false, presence, state.extensions);
       }
 
-      if (presence.attributes['type'] == 'unavailable') {
+      if (unavailable) {
         if (role == Role.none) {
           // Cannot happen while joining, so we assume we are joined
           assert(
@@ -344,24 +403,16 @@ class MUCManager extends XmppManagerBase {
             'Should not receive unavailable with role="none" while joining',
           );
           room.members.remove(from.resource);
-          getAttributes().sendEvent(
-            MemberLeftEvent(
-              bareFrom,
-              from.resource,
-            ),
-          );
+          getAttributes().sendEvent(MemberLeftEvent(bareFrom, from.resource));
         } else if (statuses.contains(nicknameChangedStatus)) {
-          assert(
-            room.joined,
-            'Should not receive nick change while joining',
-          );
+          assert(room.joined, 'Should not receive nick change while joining');
           final newNick = item.attributes['nick']! as String;
           final member = RoomMember(
             newNick,
-            Affiliation.fromString(
-              item.attributes['affiliation']! as String,
-            ),
+            Affiliation.fromString(item.attributes['affiliation']! as String),
             role,
+            realJid: _realJidOf(item),
+            show: show,
           );
 
           // Remove the old member.
@@ -372,37 +423,23 @@ class MUCManager extends XmppManagerBase {
 
           // Trigger an event.
           getAttributes().sendEvent(
-            MemberChangedNickEvent(
-              bareFrom,
-              from.resource,
-              newNick,
-            ),
+            MemberChangedNickEvent(bareFrom, from.resource, newNick),
           );
         }
       } else {
         final member = RoomMember(
           from.resource,
-          Affiliation.fromString(
-            item.attributes['affiliation']! as String,
-          ),
+          Affiliation.fromString(item.attributes['affiliation']! as String),
           role,
+          realJid: _realJidOf(item),
+          show: show,
         );
         logger.finest('Got presence from ${from.resource} in $bareFrom');
         if (room.joined) {
           if (room.members.containsKey(from.resource)) {
-            getAttributes().sendEvent(
-              MemberChangedEvent(
-                bareFrom,
-                member,
-              ),
-            );
+            getAttributes().sendEvent(MemberChangedEvent(bareFrom, member));
           } else {
-            getAttributes().sendEvent(
-              MemberJoinedEvent(
-                bareFrom,
-                member,
-              ),
-            );
+            getAttributes().sendEvent(MemberJoinedEvent(bareFrom, member));
           }
         }
 
@@ -411,12 +448,7 @@ class MUCManager extends XmppManagerBase {
       }
 
       logger.finest('Ran through');
-      return StanzaHandlerData(
-        true,
-        false,
-        presence,
-        state.extensions,
-      );
+      return StanzaHandlerData(true, false, presence, state.extensions);
     });
   }
 
@@ -434,9 +466,10 @@ class MUCManager extends XmppManagerBase {
         return state;
       }
 
-      _mucRoomCache[toJid]!.pendingMessages.add(
-        (message.id!, state.extensions.get<StableIdData>()?.originId),
-      );
+      _mucRoomCache[toJid]!.pendingMessages.add((
+        message.id!,
+        state.extensions.get<StableIdData>()?.originId,
+      ));
       return state;
     });
   }
@@ -454,59 +487,64 @@ class MUCManager extends XmppManagerBase {
         return state;
       }
 
-      if (message.type == 'groupchat' && message.firstTag('subject') != null) {
+      // Conversations MessageParser: subject without thread ends join / updates
+      // topic. A subject+thread combo is not treated as the room topic.
+      final subjectTag = message.firstTag('subject');
+      if (message.type == 'groupchat' &&
+          subjectTag != null &&
+          message.firstTag('thread') == null) {
         // The room subject marks the end of the join flow.
         if (!roomState.joined) {
           // Mark the room as joined.
           _mucRoomCache[roomJid]!.joined = true;
-          _mucRoomJoinCompleter[roomJid]!.complete(
-            const Result(true),
-          );
+          _mucRoomJoinCompleter[roomJid]!.complete(const Result(true));
           _mucRoomJoinCompleter.remove(roomJid);
           logger.finest('$roomJid is now joined');
         }
 
-        // TODO(Unknown): Signal the subject?
+        final subject = subjectTag.innerText();
+        if (roomState.subject != subject) {
+          roomState.subject = subject;
+          getAttributes().sendEvent(RoomSubjectChangedEvent(roomJid, subject));
+        }
 
-        return StanzaHandlerData(
-          true,
-          false,
-          message,
-          state.extensions,
-        );
+        return StanzaHandlerData(true, false, message, state.extensions);
       } else {
         if (!roomState.joined) {
           // Ignore the discussion history.
-          return StanzaHandlerData(
-            true,
-            false,
-            message,
-            state.extensions,
-          );
+          return StanzaHandlerData(true, false, message, state.extensions);
         }
 
         // Check if this is the message reflection.
         if (message.id == null) {
           return state;
         }
-        final pending =
-            (message.id!, state.extensions.get<StableIdData>()?.originId);
+        final pending = (
+          message.id!,
+          state.extensions.get<StableIdData>()?.originId,
+        );
         if (fromJid.resource == roomState.nick &&
             roomState.pendingMessages.contains(pending)) {
           // Silently drop the message.
           roomState.pendingMessages.remove(pending);
 
           // TODO(Unknown): Maybe send an event stating that we received the reflection.
-          return StanzaHandlerData(
-            true,
-            false,
-            message,
-            state.extensions,
-          );
+          return StanzaHandlerData(true, false, message, state.extensions);
         }
       }
 
       return state;
     });
+  }
+}
+
+/// Real bare JID from a MUC `<item jid='…'/>`, or null when withheld.
+JID? _realJidOf(XMLNode item) {
+  final raw = item.attributes['jid'];
+  if (raw is! String || raw.isEmpty) return null;
+  try {
+    return JID.fromString(raw).toBare();
+  } catch (_) {
+    return null;
   }
 }

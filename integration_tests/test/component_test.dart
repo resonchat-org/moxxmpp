@@ -4,6 +4,8 @@ import 'package:moxxmpp_socket_tcp/moxxmpp_socket_tcp.dart';
 import 'package:test/test.dart';
 
 class TestingTCPSocketWrapper extends TCPSocketWrapper {
+  TestingTCPSocketWrapper() : super(true);
+
   @override
   bool onBadCertificate(dynamic certificate, String domain) {
     return true;
@@ -20,17 +22,19 @@ void main() {
   });
 
   test('Test connecting to prosody as a component', () async {
-    final conn = XmppConnection(
-      TestingReconnectionPolicy(),
-      AlwaysConnectedConnectivityManager(),
-      ComponentToServerNegotiator(),
-      TestingTCPSocketWrapper(),
-    )..connectionSettings = ConnectionSettings(
-        jid: JID.fromString('component.localhost'),
-        password: 'abc123',
-        host: '127.0.0.1',
-        port: 8888,
-      );
+    final conn =
+        XmppConnection(
+            TestingReconnectionPolicy(),
+            AlwaysConnectedConnectivityManager(),
+            ComponentToServerNegotiator(),
+            TestingTCPSocketWrapper(),
+          )
+          ..connectionSettings = ConnectionSettings(
+            jid: JID.fromString('component.localhost'),
+            password: 'abc123',
+            host: '127.0.0.1',
+            port: 8888,
+          );
 
     final result = await conn.connect(
       waitUntilLogin: true,

@@ -2,6 +2,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/message.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/stanza.dart';
@@ -18,9 +19,7 @@ class LastMessageCorrectionData implements StanzaHandlerExtension {
     return XMLNode.xmlns(
       tag: 'replace',
       xmlns: lmcXmlns,
-      attributes: {
-        'id': id,
-      },
+      attributes: {'id': id},
     );
   }
 }
@@ -33,15 +32,15 @@ class LastMessageCorrectionManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagName: 'replace',
-          tagXmlns: lmcXmlns,
-          callback: _onMessage,
-          // Before the message handler
-          priority: -99,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagName: 'replace',
+      tagXmlns: lmcXmlns,
+      callback: _onMessage,
+      // Before the message handler
+      priority: messageExtensionPriority,
+    ),
+  ];
 
   @override
   Future<bool> isSupported() async => true;
@@ -61,11 +60,7 @@ class LastMessageCorrectionManager extends XmppManagerBase {
     TypedMap<StanzaHandlerExtension> extensions,
   ) {
     final data = extensions.get<LastMessageCorrectionData>();
-    return data != null
-        ? [
-            data.toXML(),
-          ]
-        : [];
+    return data != null ? [data.toXML()] : [];
   }
 
   @override

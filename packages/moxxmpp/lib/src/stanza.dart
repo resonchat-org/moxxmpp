@@ -13,6 +13,7 @@ class StanzaDetails {
     this.shouldEncrypt = true,
     this.encrypted = false,
     this.forceEncryption = false,
+    this.omemoRecipientJids,
     this.bypassQueue = false,
     this.responseBypassesQueue = true,
     this.postSendExtensions,
@@ -40,6 +41,10 @@ class StanzaDetails {
   /// Tells an E2EE implementation, if available, to encrypt the stanza (true) or
   /// ignore the stanza (false).
   final bool shouldEncrypt;
+
+  /// When set, OMEMO encrypts to these bare JIDs instead of `stanza.to`
+  /// (Conversations MUC: keys for every member's real JID, `to` is the room).
+  final List<String>? omemoRecipientJids;
 
   /// Bypasses being put into the queue. Useful for sending stanzas that must go out
   /// now, where it's okay if it does not get sent.
@@ -77,12 +82,49 @@ abstract class StanzaError {
         return ServiceUnavailableError();
     }
 
-    return UnknownStanzaError();
+    // Keep the server's actual objection. Collapsing it into
+    // UnknownStanzaError threw away the only useful part of the answer -
+    // "not-authorized" and "service-unavailable" call for completely
+    // different responses, and neither was visible before.
+    return GenericStanzaError(
+      type: '${error.attributes['type'] ?? ''}',
+      code: '${error.attributes['code'] ?? ''}',
+      text: error.firstTag('text')?.text ?? '',
+      condition: specificError.tag,
+    );
   }
 
   static StanzaError? fromStanza(Stanza stanza) {
     return fromXMLNode(stanza);
   }
+}
+
+/// An error condition this class does not model, with the server's own
+/// wording preserved so callers can act on it.
+class GenericStanzaError extends StanzaError {
+  GenericStanzaError({
+    required this.type,
+    required this.code,
+    required this.text,
+    required this.condition,
+  });
+
+  /// RFC 6120 error type, e.g. `modify`, `cancel`, `auth`.
+  final String type;
+
+  /// Legacy error code, e.g. `404`.
+  final String code;
+
+  /// Human-readable text supplied by the server, if any.
+  final String text;
+
+  /// The defined condition's element name, e.g. `forbidden`.
+  final String condition;
+
+  @override
+  String toString() =>
+      'GenericStanzaError(type: $type, code: $code, '
+      'condition: $condition${text.isEmpty ? '' : ', text: $text'})';
 }
 
 /// Recipient does not provide a given service.
@@ -120,21 +162,21 @@ class Stanza extends XMLNode {
     Map<String, String> attributes = const {},
     String? xmlns,
   }) : super(
-          tag: tag,
-          attributes: <String, dynamic>{
-            ...attributes,
-            ...type != null
-                ? <String, dynamic>{'type': type}
-                : <String, dynamic>{},
-            ...id != null ? <String, dynamic>{'id': id} : <String, dynamic>{},
-            ...to != null ? <String, dynamic>{'to': to} : <String, dynamic>{},
-            ...from != null
-                ? <String, dynamic>{'from': from}
-                : <String, dynamic>{},
-            if (xmlns != null) 'xmlns': xmlns,
-          },
-          children: children,
-        );
+         tag: tag,
+         attributes: <String, dynamic>{
+           ...attributes,
+           ...type != null
+               ? <String, dynamic>{'type': type}
+               : <String, dynamic>{},
+           ...id != null ? <String, dynamic>{'id': id} : <String, dynamic>{},
+           ...to != null ? <String, dynamic>{'to': to} : <String, dynamic>{},
+           ...from != null
+               ? <String, dynamic>{'from': from}
+               : <String, dynamic>{},
+           if (xmlns != null) 'xmlns': xmlns,
+         },
+         children: children,
+       );
 
   factory Stanza.iq({
     String? to,
@@ -208,8 +250,10 @@ class Stanza extends XMLNode {
       children: node.children,
       // TODO(Unknown): Remove to, from, id, and type
       // TODO(Unknown): Not sure if this is the correct way to approach this
-      attributes:
-          node.attributes.map<String, String>((String key, dynamic value) {
+      attributes: node.attributes.map<String, String>((
+        String key,
+        dynamic value,
+      ) {
         return MapEntry(key, value.toString());
       }),
     );
@@ -235,9 +279,7 @@ class Stanza extends XMLNode {
       id: id ?? this.id,
       type: type ?? this.type,
       children: children ?? this.children,
-      attributes: {
-        ...attributes.cast<String, String>(),
-      },
+      attributes: {...attributes.cast<String, String>()},
       xmlns: xmlns ?? this.xmlns,
     );
   }
@@ -256,11 +298,7 @@ XMLNode buildErrorElement(String type, String condition, {String? text}) {
         xmlns: fullStanzaXmlns,
         children: [
           if (text != null)
-            XMLNode.xmlns(
-              tag: 'text',
-              xmlns: fullStanzaXmlns,
-              text: text,
-            ),
+            XMLNode.xmlns(tag: 'text', xmlns: fullStanzaXmlns, text: text),
         ],
       ),
     ],

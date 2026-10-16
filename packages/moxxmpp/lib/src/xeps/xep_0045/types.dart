@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:moxxmpp/src/jid.dart';
 import 'package:moxxmpp/src/namespaces.dart';
+import 'package:moxxmpp/src/presence.dart';
 import 'package:moxxmpp/src/xeps/xep_0004.dart';
 import 'package:moxxmpp/src/xeps/xep_0030/types.dart';
 
@@ -77,9 +78,7 @@ class RoomInformation {
   /// Constructs a [RoomInformation] object from a [DiscoInfo] object.
   /// The [DiscoInfo] object contains the necessary information to populate
   /// the [RoomInformation] fields.
-  factory RoomInformation.fromDiscoInfo({
-    required DiscoInfo discoInfo,
-  }) =>
+  factory RoomInformation.fromDiscoInfo({required DiscoInfo discoInfo}) =>
       RoomInformation(
         jid: discoInfo.jid!,
         features: discoInfo.features,
@@ -111,7 +110,13 @@ typedef PendingMessage = (String, String?);
 
 /// An entity inside a MUC room. The name "member" here does not refer to an affiliation of member.
 class RoomMember {
-  const RoomMember(this.nick, this.affiliation, this.role);
+  const RoomMember(
+    this.nick,
+    this.affiliation,
+    this.role, {
+    this.realJid,
+    this.show,
+  });
 
   /// The entity's nickname.
   final String nick;
@@ -122,15 +127,29 @@ class RoomMember {
   /// The assigned role.
   final Role role;
 
+  /// Real bare JID from `<item jid='…'/>`, when the room is non-anonymous.
+  ///
+  /// Null in anonymous rooms — OMEMO cannot address such an occupant
+  /// (Conversations drops encrypted MUC traffic without a real JID).
+  final JID? realJid;
+
+  /// RFC 6121 `<show/>` from this occupant's MUC presence (Gajim
+  /// `GroupchatParticipant.show`). Null when unavailable / not present.
+  final PresenceShow? show;
+
   RoomMember copyWith({
     String? nick,
     Affiliation? affiliation,
     Role? role,
+    JID? realJid,
+    PresenceShow? show,
   }) {
     return RoomMember(
       nick ?? this.nick,
       affiliation ?? this.affiliation,
       role ?? this.role,
+      realJid: realJid ?? this.realJid,
+      show: show ?? this.show,
     );
   }
 }
@@ -154,6 +173,12 @@ class RoomState {
 
   /// Our own role inside the MUC.
   Role? role;
+
+  /// Current room subject (XEP-0045), or null when never announced.
+  ///
+  /// Empty string means the room cleared the subject. Distinct from null so
+  /// a fresh join without a subject stanza does not invent an empty topic.
+  String? subject;
 
   /// The list of messages that we sent and are waiting for their echo.
   late final List<PendingMessage> pendingMessages;

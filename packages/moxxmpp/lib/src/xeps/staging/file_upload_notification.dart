@@ -2,6 +2,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/message.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/stanza.dart';
@@ -23,9 +24,7 @@ class FileUploadNotificationData implements StanzaHandlerExtension {
     return XMLNode.xmlns(
       tag: 'file-upload',
       xmlns: fileUploadNotificationXmlns,
-      children: [
-        metadata.toXML(),
-      ],
+      children: [metadata.toXML()],
     );
   }
 }
@@ -41,9 +40,7 @@ class FileUploadNotificationCancellationData implements StanzaHandlerExtension {
     return XMLNode.xmlns(
       tag: 'cancelled',
       xmlns: fileUploadNotificationXmlns,
-      attributes: {
-        'id': id,
-      },
+      attributes: {'id': id},
     );
   }
 }
@@ -59,9 +56,7 @@ class FileUploadNotificationReplacementData implements StanzaHandlerExtension {
     return XMLNode.xmlns(
       tag: 'replaces',
       xmlns: fileUploadNotificationXmlns,
-      attributes: {
-        'id': id,
-      },
+      attributes: {'id': id},
     );
   }
 }
@@ -71,28 +66,28 @@ class FileUploadNotificationManager extends XmppManagerBase {
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagName: 'file-upload',
-          tagXmlns: fileUploadNotificationXmlns,
-          callback: _onFileUploadNotificationReceived,
-          priority: -99,
-        ),
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagName: 'replaces',
-          tagXmlns: fileUploadNotificationXmlns,
-          callback: _onFileUploadNotificationReplacementReceived,
-          priority: -99,
-        ),
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagName: 'cancelled',
-          tagXmlns: fileUploadNotificationXmlns,
-          callback: _onFileUploadNotificationCancellationReceived,
-          priority: -99,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagName: 'file-upload',
+      tagXmlns: fileUploadNotificationXmlns,
+      callback: _onFileUploadNotificationReceived,
+      priority: messageExtensionPriority,
+    ),
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagName: 'replaces',
+      tagXmlns: fileUploadNotificationXmlns,
+      callback: _onFileUploadNotificationReplacementReceived,
+      priority: messageExtensionPriority,
+    ),
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagName: 'cancelled',
+      tagXmlns: fileUploadNotificationXmlns,
+      callback: _onFileUploadNotificationCancellationReceived,
+      priority: messageExtensionPriority,
+    ),
+  ];
 
   @override
   Future<bool> isSupported() async => true;
@@ -101,8 +96,10 @@ class FileUploadNotificationManager extends XmppManagerBase {
     Stanza message,
     StanzaHandlerData state,
   ) async {
-    final funElement =
-        message.firstTag('file-upload', xmlns: fileUploadNotificationXmlns)!;
+    final funElement = message.firstTag(
+      'file-upload',
+      xmlns: fileUploadNotificationXmlns,
+    )!;
     return state
       ..extensions.set(
         FileUploadNotificationData(
@@ -117,8 +114,10 @@ class FileUploadNotificationManager extends XmppManagerBase {
     Stanza message,
     StanzaHandlerData state,
   ) async {
-    final element =
-        message.firstTag('replaces', xmlns: fileUploadNotificationXmlns)!;
+    final element = message.firstTag(
+      'replaces',
+      xmlns: fileUploadNotificationXmlns,
+    )!;
     return state
       ..extensions.set(
         FileUploadNotificationReplacementData(
@@ -131,8 +130,10 @@ class FileUploadNotificationManager extends XmppManagerBase {
     Stanza message,
     StanzaHandlerData state,
   ) async {
-    final element =
-        message.firstTag('cancels', xmlns: fileUploadNotificationXmlns)!;
+    final element = message.firstTag(
+      'cancels',
+      xmlns: fileUploadNotificationXmlns,
+    )!;
     return state
       ..extensions.set(
         FileUploadNotificationCancellationData(

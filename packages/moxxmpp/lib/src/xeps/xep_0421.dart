@@ -3,16 +3,14 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
-import 'package:moxxmpp/src/message.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/stanza.dart';
 import 'package:moxxmpp/src/stringxml.dart';
 
 /// Representation of a <occupant-id /> element.
 class OccupantIdData implements StanzaHandlerExtension {
-  const OccupantIdData(
-    this.id,
-  );
+  const OccupantIdData(this.id);
 
   /// The unique occupant id.
   final String id;
@@ -21,9 +19,7 @@ class OccupantIdData implements StanzaHandlerExtension {
     return XMLNode.xmlns(
       tag: 'occupant-id',
       xmlns: occupantIdXmlns,
-      attributes: {
-        'id': id,
-      },
+      attributes: {'id': id},
     );
   }
 }
@@ -32,21 +28,19 @@ class OccupantIdManager extends XmppManagerBase {
   OccupantIdManager() : super(occupantIdManager);
 
   @override
-  List<String> getDiscoFeatures() => [
-        occupantIdXmlns,
-      ];
+  List<String> getDiscoFeatures() => [occupantIdXmlns];
 
   @override
   List<StanzaHandler> getIncomingStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagName: 'occupant-id',
-          tagXmlns: occupantIdXmlns,
-          callback: _onMessage,
-          // Before the MessageManager
-          priority: MessageManager.messageHandlerPriority + 1,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagName: 'occupant-id',
+      tagXmlns: occupantIdXmlns,
+      callback: _onMessage,
+      // Before the MessageManager
+      priority: messageExtensionPriority,
+    ),
+  ];
 
   @override
   Future<bool> isSupported() async => true;

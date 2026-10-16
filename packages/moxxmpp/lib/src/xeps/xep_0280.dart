@@ -6,6 +6,7 @@ import 'package:moxxmpp/src/managers/base.dart';
 import 'package:moxxmpp/src/managers/data.dart';
 import 'package:moxxmpp/src/managers/handlers.dart';
 import 'package:moxxmpp/src/managers/namespaces.dart';
+import 'package:moxxmpp/src/managers/priorities.dart';
 import 'package:moxxmpp/src/namespaces.dart';
 import 'package:moxxmpp/src/negotiators/namespaces.dart';
 import 'package:moxxmpp/src/stanza.dart';
@@ -34,23 +35,26 @@ class CarbonsManager extends XmppManagerBase {
   /// Indicates that we know that [CarbonsManager._supported] is accurate.
   bool _gotSupported = false;
 
+  /// Ahead of OMEMO/PQ decrypt (monocles unwraps carbons before parsing
+  /// `<encrypted/>`). Priority -98 ran *after* decrypt and left carbon
+  /// copies showing the cleartext fallback body.
   @override
   List<StanzaHandler> getIncomingPreStanzaHandlers() => [
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagName: 'received',
-          tagXmlns: carbonsXmlns,
-          callback: _onMessageReceived,
-          priority: -98,
-        ),
-        StanzaHandler(
-          stanzaTag: 'message',
-          tagName: 'sent',
-          tagXmlns: carbonsXmlns,
-          callback: _onMessageSent,
-          priority: -98,
-        ),
-      ];
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagName: 'received',
+      tagXmlns: carbonsXmlns,
+      callback: _onMessageReceived,
+      priority: stanzaUnwrapPriority,
+    ),
+    StanzaHandler(
+      stanzaTag: 'message',
+      tagName: 'sent',
+      tagXmlns: carbonsXmlns,
+      callback: _onMessageSent,
+      priority: stanzaUnwrapPriority,
+    ),
+  ];
 
   @override
   Future<bool> isSupported() async {
@@ -120,12 +124,7 @@ class CarbonsManager extends XmppManagerBase {
         Stanza.iq(
           to: attrs.getFullJID().toBare().toString(),
           type: 'set',
-          children: [
-            XMLNode.xmlns(
-              tag: 'enable',
-              xmlns: carbonsXmlns,
-            ),
-          ],
+          children: [XMLNode.xmlns(tag: 'enable', xmlns: carbonsXmlns)],
         ),
       ),
     ))!;
@@ -150,12 +149,7 @@ class CarbonsManager extends XmppManagerBase {
       StanzaDetails(
         Stanza.iq(
           type: 'set',
-          children: [
-            XMLNode.xmlns(
-              tag: 'disable',
-              xmlns: carbonsXmlns,
-            ),
-          ],
+          children: [XMLNode.xmlns(tag: 'disable', xmlns: carbonsXmlns)],
         ),
       ),
     ))!;
@@ -196,10 +190,7 @@ class CarbonsManager extends XmppManagerBase {
   /// Returns true if the carbon is valid. Returns false if not.
   bool isCarbonValid(JID senderJid) {
     return _isEnabled &&
-        getAttributes().getFullJID().bareCompare(
-              senderJid,
-              ensureBare: true,
-            );
+        getAttributes().getFullJID().bareCompare(senderJid, ensureBare: true);
   }
 }
 
@@ -239,12 +230,7 @@ class CarbonsNegotiator extends Bind2FeatureNegotiator {
     }
 
     _requestedEnablement = true;
-    return [
-      XMLNode.xmlns(
-        tag: 'enable',
-        xmlns: carbonsXmlns,
-      ),
-    ];
+    return [XMLNode.xmlns(tag: 'enable', xmlns: carbonsXmlns)];
   }
 
   @override

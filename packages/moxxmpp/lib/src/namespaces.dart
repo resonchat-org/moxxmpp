@@ -6,6 +6,14 @@ const bindXmlns = 'urn:ietf:params:xml:ns:xmpp-bind';
 const startTlsXmlns = 'urn:ietf:params:xml:ns:xmpp-tls';
 const fullStanzaXmlns = 'urn:ietf:params:xml:ns:xmpp-stanzas';
 
+// RFC 7395 (XMPP over WebSocket framing)
+const xmppFramingXmlns = 'urn:ietf:params:xml:ns:xmpp-framing';
+
+// XEP-0156 (Discovering Alternative XMPP Connection Methods)
+const hostMetaXrdXmlns = 'http://docs.oasis-open.org/ns/xri/xrd-1.0';
+const websocketAltConnectionsXmlns = 'urn:xmpp:alt-connections:websocket';
+const boshAltConnectionsXmlns = 'urn:xmpp:alt-connections:xbosh';
+
 // RFC 6121
 const rosterXmlns = 'jabber:iq:roster';
 const rosterVersioningXmlns = 'urn:xmpp:features:rosterver';
@@ -25,7 +33,14 @@ const extendedAddressingXmlns = 'http://jabber.org/protocol/address';
 // XEP-0045
 const mucXmlns = 'http://jabber.org/protocol/muc';
 const mucUserXmlns = 'http://jabber.org/protocol/muc#user';
+const mucAdminXmlns = 'http://jabber.org/protocol/muc#admin';
+const mucOwnerXmlns = 'http://jabber.org/protocol/muc#owner';
 const roomInfoFormType = 'http://jabber.org/protocol/muc#roominfo';
+const roomConfigFormType = 'http://jabber.org/protocol/muc#roomconfig';
+
+// XEP-0048 Bookmarks (legacy storage + PEP conversion)
+const bookmarksXmlns = 'storage:bookmarks';
+const bookmarksConversionXmlns = 'urn:xmpp:bookmarks-conversion:0';
 
 // XEP-0054
 const vCardTempXmlns = 'vcard-temp';
@@ -47,9 +62,25 @@ const pubsubNodeConfigMultiItems =
 // XEP-0066
 const oobDataXmlns = 'jabber:x:oob';
 
+// XEP-0077 (In-Band Registration)
+const registerXmlns = 'jabber:iq:register';
+const registerStreamFeatureXmlns = 'http://jabber.org/features/iq-register';
+
+// XEP-0158 (CAPTCHA Forms) — used with IBR
+const captchaXmlns = 'urn:xmpp:captcha';
+
+// XEP-0231 (Bits of Binary) — captcha image payloads
+const bobXmlns = 'urn:xmpp:bob';
+
+// XEP-0221 (Data Forms Media Element)
+const mediaElementXmlns = 'urn:xmpp:media-element';
+
 // XEP-0084
 const userAvatarDataXmlns = 'urn:xmpp:avatar:data';
 const userAvatarMetadataXmlns = 'urn:xmpp:avatar:metadata';
+
+// XEP-0172 User Nickname
+const nickXmlns = 'http://jabber.org/protocol/nick';
 
 // XEP-0085
 const chatStateXmlns = 'http://jabber.org/protocol/chatstates';
@@ -121,6 +152,13 @@ const emeOmemo = 'eu.siacs.conversations.axolotl';
 const emeOmemo1 = 'urn:xmpp:omemo:1';
 const emeOmemo2 = 'urn:xmpp:omemo:2';
 
+/// monocles PQ-OMEMO2 namespace (`urn:monocles:omemo-pq:1`).
+///
+/// Deliberately not `urn:xmpp:omemo:2` — wire-incompatible with XEP-0384
+/// v0.9; classical clients ignore this node. Symbol name `emePomemo0` is
+/// historical.
+const emePomemo0 = 'urn:monocles:omemo-pq:1';
+
 // XEP-0384
 const omemoXmlns = 'urn:xmpp:omemo:2';
 const omemoDevicesXmlns = 'urn:xmpp:omemo:2:devices';
@@ -134,6 +172,10 @@ const bind2Xmlns = 'urn:xmpp:bind:0';
 
 // XEP-0388
 const sasl2Xmlns = 'urn:xmpp:sasl:2';
+
+// XEP-0402 PEP Native Bookmarks
+const bookmarks2Xmlns = 'urn:xmpp:bookmarks:1';
+const bookmarks2CompatXmlns = 'urn:xmpp:bookmarks:1#compat';
 
 // XEP-0420
 const sceXmlns = 'urn:xmpp:sce:1';
