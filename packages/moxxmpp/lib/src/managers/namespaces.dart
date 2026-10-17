@@ -3,6 +3,7 @@ const discoManager = 'org.moxxmpp.discomanager';
 const messageManager = 'org.moxxmpp.messagemanager';
 const rosterManager = 'org.moxxmpp.rostermanager';
 const presenceManager = 'org.moxxmpp.presencemanager';
+const idleManager = 'org.moxxmpp.idlemanager';
 const csiManager = 'org.moxxmpp.csimanager';
 const carbonsManager = 'org.moxxmpp.carbonsmanager';
 const vcardManager = 'org.moxxmpp.vcardmanager';

@@ -19,6 +19,9 @@ const rosterXmlns = 'jabber:iq:roster';
 const rosterVersioningXmlns = 'urn:xmpp:features:rosterver';
 const subscriptionPreApprovalXmlns = 'urn:xmpp:features:pre-approval';
 
+// XEP-0319 (Last User Interaction in Presence)
+const idleXmlns = 'urn:xmpp:idle:1';
+
 // XEP-0004
 const dataFormsXmlns = 'jabber:x:data';
 const formVarFormType = 'FORM_TYPE';

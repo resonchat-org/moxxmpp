@@ -108,9 +108,13 @@ class PresenceData {
 /// Fired for available / unavailable presence (RFC 6121 §4.2 / §4.5).
 ///
 /// Subscription management uses [SubscriptionRequestReceivedEvent] instead.
+/// [extensions] holds data other managers attached (for example XEP-0319).
 class PresenceReceivedEvent extends XmppEvent {
-  PresenceReceivedEvent(this.data);
+  PresenceReceivedEvent(this.data, this.extensions);
   final PresenceData data;
+  final TypedMap<StanzaHandlerExtension> extensions;
+
+  T? get<T>() => extensions.get<T>();
 }
 
 /// A pseudo-negotiator that does not really negotiate anything. Instead, its purpose
@@ -283,7 +287,7 @@ class PresenceManager extends XmppManagerBase {
       "from '$fromRaw' show=${data.show.name}",
     );
 
-    attrs.sendEvent(PresenceReceivedEvent(data));
+    attrs.sendEvent(PresenceReceivedEvent(data, state.extensions));
     return state..done = true;
   }
 
