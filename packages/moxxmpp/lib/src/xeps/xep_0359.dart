@@ -99,16 +99,21 @@ class StableIdManager extends XmppManagerBase {
       originId = originIdElement.attributes['id']! as String;
     }
 
-    // Process the stanza id tag
+    // Process the stanza id tag. Skip an element that is missing id or by
+    // instead of failing the whole handler: that would also drop origin-id,
+    // and a group retraction would then go out with the wrong id.
     if (stanzaIdElements.isNotEmpty) {
-      stanzaIds = stanzaIdElements
-          .map(
-            (element) => StanzaId(
+      stanzaIds = [
+        for (final element in stanzaIdElements)
+          if (element.attributes['id'] is String &&
+              (element.attributes['id'] as String).isNotEmpty &&
+              element.attributes['by'] is String &&
+              (element.attributes['by'] as String).isNotEmpty)
+            StanzaId(
               element.attributes['id']! as String,
               JID.fromString(element.attributes['by']! as String),
             ),
-          )
-          .toList();
+      ];
     }
 
     return state..extensions.set(StableIdData(originId, stanzaIds));

@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:meta/meta.dart';
 import 'package:moxxmpp/src/events.dart';
 import 'package:moxxmpp/src/managers/base.dart';

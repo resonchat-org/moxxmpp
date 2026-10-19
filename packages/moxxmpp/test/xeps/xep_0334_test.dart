@@ -7,9 +7,7 @@ import '../helpers/xmpp.dart';
 void main() {
   test('Test receiving a message processing hint', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -20,15 +18,12 @@ void main() {
     <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
       <mechanism>PLAIN</mechanism>
     </mechanisms>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
       StringExpectation(
         "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>AHBvbHlub21kaXZpc2lvbgBhYWFh</auth>",
         '<success xmlns="urn:ietf:params:xml:ns:xmpp-sasl" />',
       ),
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -45,8 +40,7 @@ void main() {
     <csi xmlns="urn:xmpp:csi:0"/>
     <sm xmlns="urn:xmpp:sm:3"/>
   </stream:features>
-''',
-      ),
+'''),
       StanzaExpectation(
         '<iq xmlns="jabber:client" type="set" id="a"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"/></iq>',
         '<iq xmlns="jabber:client" type="result" id="a"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><jid>polynomdivision@test.server/MU29eEZn</jid></bind></iq>',

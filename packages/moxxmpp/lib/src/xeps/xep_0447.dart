@@ -114,10 +114,9 @@ class StatelessFileSharingData implements StanzaHandlerExtension {
 
   StatelessFileSharingUrlSource? getFirstUrlSource() {
     return sources.firstWhereOrNull(
-          (StatelessFileSharingSource source) =>
-              source is StatelessFileSharingUrlSource,
-        )
-        as StatelessFileSharingUrlSource?;
+      (StatelessFileSharingSource source) =>
+          source is StatelessFileSharingUrlSource,
+    ) as StatelessFileSharingUrlSource?;
   }
 }
 

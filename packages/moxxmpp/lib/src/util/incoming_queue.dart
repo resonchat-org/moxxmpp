@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+
 import 'package:logging/logging.dart';
 import 'package:moxxmpp/src/awaiter.dart';
 import 'package:moxxmpp/src/parser.dart';

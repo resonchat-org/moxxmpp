@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:moxxmpp/moxxmpp.dart';
 import 'package:test/test.dart';
+
 import 'helpers/logging.dart';
 
 void main() {

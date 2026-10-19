@@ -1,7 +1,9 @@
 import 'dart:convert';
+
 import 'package:hex/hex.dart';
 import 'package:moxxmpp/moxxmpp.dart';
 import 'package:test/test.dart';
+
 import '../helpers/xmpp.dart';
 
 final scramSha1StreamFeatures = XMLNode(

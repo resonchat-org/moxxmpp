@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:moxxmpp/src/parser.dart';
 import 'package:test/test.dart';
 

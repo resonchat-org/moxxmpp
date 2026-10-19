@@ -1,5 +1,6 @@
 import 'package:moxxmpp/moxxmpp.dart';
 import 'package:test/test.dart';
+
 import '../helpers/logging.dart';
 import '../helpers/xmpp.dart';
 
@@ -49,9 +50,7 @@ void main() {
 
   test('Test enabling message carbons inline with Bind2', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -77,19 +76,15 @@ void main() {
     <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind">
       <required/>
     </bind>
-  </stream:features>''',
-      ),
-      StanzaExpectation(
-        "<authenticate xmlns='urn:xmpp:sasl:2' mechanism='PLAIN'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>AHBvbHlub21kaXZpc2lvbgBhYWFh</initial-response><bind xmlns='urn:xmpp:bind:0'><enable xmlns='urn:xmpp:carbons:2' /></bind></authenticate>",
-        '''
+  </stream:features>'''),
+      StanzaExpectation("<authenticate xmlns='urn:xmpp:sasl:2' mechanism='PLAIN'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>AHBvbHlub21kaXZpc2lvbgBhYWFh</initial-response><bind xmlns='urn:xmpp:bind:0'><enable xmlns='urn:xmpp:carbons:2' /></bind></authenticate>", '''
 <success xmlns='urn:xmpp:sasl:2'>
   <authorization-identifier>polynomdivision@test.server/test-resource</authorization-identifier>
   <bound xmlns='urn:xmpp:bind:0'>
     <enabled xmlns='urn:xmpp:carbons:2' />
   </bound>
 </success>
-        ''',
-      ),
+        '''),
     ]);
     final conn =
         XmppConnection(

@@ -64,9 +64,7 @@ void main() {
 
   test('Test simple SASL2 negotiation', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -83,16 +81,12 @@ void main() {
     <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind">
       <required/>
     </bind>
-  </stream:features>''',
-      ),
-      StanzaExpectation(
-        "<authenticate xmlns='urn:xmpp:sasl:2' mechanism='PLAIN'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>AHBvbHlub21kaXZpc2lvbgBhYWFh</initial-response></authenticate>",
-        '''
+  </stream:features>'''),
+      StanzaExpectation("<authenticate xmlns='urn:xmpp:sasl:2' mechanism='PLAIN'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>AHBvbHlub21kaXZpc2lvbgBhYWFh</initial-response></authenticate>", '''
 <success xmlns='urn:xmpp:sasl:2'>
   <authorization-identifier>polynomdivision@test.server</authorization-identifier>
 </success>
-        ''',
-      ),
+        '''),
       StanzaExpectation(
         "<iq xmlns='jabber:client' type='set' id='aaaa'><bind xmlns='urn:ietf:params:xml:ns:xmpp-bind' /></iq>",
         '''
@@ -139,9 +133,7 @@ void main() {
 
   test('Test SCRAM-SHA-1 SASL2 negotiation with a valid signature', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='server' from='user@server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='server' from='user@server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -160,14 +152,10 @@ void main() {
     <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind">
       <required/>
     </bind>
-  </stream:features>''',
-      ),
-      StanzaExpectation(
-        "<authenticate xmlns='urn:xmpp:sasl:2' mechanism='SCRAM-SHA-256'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>biwsbj11c2VyLHI9ck9wck5HZndFYmVSV2diTkVrcU8=</initial-response></authenticate>",
-        '''
+  </stream:features>'''),
+      StanzaExpectation("<authenticate xmlns='urn:xmpp:sasl:2' mechanism='SCRAM-SHA-256'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>biwsbj11c2VyLHI9ck9wck5HZndFYmVSV2diTkVrcU8=</initial-response></authenticate>", '''
 <challenge xmlns='urn:xmpp:sasl:2'>cj1yT3ByTkdmd0ViZVJXZ2JORWtxTyVodllEcFdVYTJSYVRDQWZ1eEZJbGopaE5sRiRrMCxzPVcyMlphSjBTTlk3c29Fc1VFamI2Z1E9PSxpPTQwOTY=</challenge>
-        ''',
-      ),
+        '''),
       StanzaExpectation(
         '<response xmlns="urn:xmpp:sasl:2">Yz1iaXdzLHI9ck9wck5HZndFYmVSV2diTkVrcU8laHZZRHBXVWEyUmFUQ0FmdXhGSWxqKWhObEYkazAscD1kSHpiWmFwV0lrNGpVaE4rVXRlOXl0YWc5empmTUhnc3FtbWl6N0FuZFZRPQ==</response>',
         '<success xmlns="urn:xmpp:sasl:2"><additional-data>dj02cnJpVFJCaTIzV3BSUi93dHVwK21NaFVaVW4vZEI1bkxUSlJzamw5NUc0PQ==</additional-data><authorization-identifier>user@server</authorization-identifier></success>',
@@ -224,9 +212,7 @@ void main() {
 
   test('Test SCRAM-SHA-1 SASL2 negotiation with a valid signature', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='server' from='user@server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='server' from='user@server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -245,14 +231,10 @@ void main() {
     <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind">
       <required/>
     </bind>
-  </stream:features>''',
-      ),
-      StanzaExpectation(
-        "<authenticate xmlns='urn:xmpp:sasl:2' mechanism='SCRAM-SHA-1'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>biwsbj11c2VyLHI9ZnlrbytkMmxiYkZnT05Sdjlxa3hkYXdM</initial-response></authenticate>",
-        '''
+  </stream:features>'''),
+      StanzaExpectation("<authenticate xmlns='urn:xmpp:sasl:2' mechanism='SCRAM-SHA-1'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>biwsbj11c2VyLHI9ZnlrbytkMmxiYkZnT05Sdjlxa3hkYXdM</initial-response></authenticate>", '''
 <challenge xmlns='urn:xmpp:sasl:2'>cj1meWtvK2QybGJiRmdPTlJ2OXFreGRhd0wzcmZjTkhZSlkxWlZ2V1ZzN2oscz1RU1hDUitRNnNlazhiZjkyLGk9NDA5Ng==</challenge>
-        ''',
-      ),
+        '''),
       StanzaExpectation(
         '<response xmlns="urn:xmpp:sasl:2">Yz1iaXdzLHI9ZnlrbytkMmxiYkZnT05Sdjlxa3hkYXdMM3JmY05IWUpZMVpWdldWczdqLHA9djBYOHYzQnoyVDBDSkdiSlF5RjBYK0hJNFRzPQ==</response>',
         '<success xmlns="urn:xmpp:sasl:2"><additional-data>dj1ybUY5cHFWOFM3c3VBb1pXamE0ZEpSa0ZzS1E9</additional-data><authorization-identifier>user@server</authorization-identifier></success>',
@@ -307,11 +289,11 @@ void main() {
     expect(result.isType<NegotiatorError>(), false);
   });
 
-  test('Test SCRAM-SHA-1 SASL2 negotiation with an invalid signature', () async {
-    final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='server' from='user@server' xml:lang='en'>",
-        '''
+  test(
+    'Test SCRAM-SHA-1 SASL2 negotiation with an invalid signature',
+    () async {
+      final fakeSocket = StubTCPSocket([
+        StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='server' from='user@server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -330,66 +312,64 @@ void main() {
     <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind">
       <required/>
     </bind>
-  </stream:features>''',
-      ),
-      StanzaExpectation(
-        "<authenticate xmlns='urn:xmpp:sasl:2' mechanism='SCRAM-SHA-256'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>biwsbj11c2VyLHI9ck9wck5HZndFYmVSV2diTkVrcU8=</initial-response></authenticate>",
-        '''
+  </stream:features>'''),
+        StanzaExpectation("<authenticate xmlns='urn:xmpp:sasl:2' mechanism='SCRAM-SHA-256'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>biwsbj11c2VyLHI9ck9wck5HZndFYmVSV2diTkVrcU8=</initial-response></authenticate>", '''
 <challenge xmlns='urn:xmpp:sasl:2'>cj1yT3ByTkdmd0ViZVJXZ2JORWtxTyVodllEcFdVYTJSYVRDQWZ1eEZJbGopaE5sRiRrMCxzPVcyMlphSjBTTlk3c29Fc1VFamI2Z1E9PSxpPTQwOTY=</challenge>
-        ''',
-      ),
-      StanzaExpectation(
-        '<response xmlns="urn:xmpp:sasl:2">Yz1iaXdzLHI9ck9wck5HZndFYmVSV2diTkVrcU8laHZZRHBXVWEyUmFUQ0FmdXhGSWxqKWhObEYkazAscD1kSHpiWmFwV0lrNGpVaE4rVXRlOXl0YWc5empmTUhnc3FtbWl6N0FuZFZRPQ==</response>',
-        '<success xmlns="urn:xmpp:sasl:2"><additional-data>dj1zbUY5cHFWOFM3c3VBb1pXamE0ZEpSa0ZzS1E9</additional-data><authorization-identifier>user@server</authorization-identifier></success>',
-      ),
-    ]);
-    final conn =
-        XmppConnection(
-            TestingReconnectionPolicy(),
-            AlwaysConnectedConnectivityManager(),
-            ClientToServerNegotiator(),
-            fakeSocket,
-          )
-          ..connectionSettings = ConnectionSettings(
-            jid: JID.fromString('user@server'),
-            password: 'pencil',
-          );
-    await conn.registerManagers([
-      PresenceManager(),
-      RosterManager(TestingRosterStateManager('', [])),
-      DiscoManager([]),
-    ]);
-    await conn.registerFeatureNegotiators([
-      SaslPlainNegotiator(),
-      SaslScramNegotiator(
-        10,
-        'n=user,r=rOprNGfwEbeRWgbNEkqO',
-        'rOprNGfwEbeRWgbNEkqO',
-        ScramHashType.sha256,
-      ),
-      ResourceBindingNegotiator(),
-      Sasl2Negotiator()
-        ..userAgent = const UserAgent(
-          id: 'd4565fa7-4d72-4749-b3d3-740edbf87770',
-          software: 'moxxmpp',
-          device: "PapaTutuWawa's awesome device",
+        '''),
+        StanzaExpectation(
+          '<response xmlns="urn:xmpp:sasl:2">Yz1iaXdzLHI9ck9wck5HZndFYmVSV2diTkVrcU8laHZZRHBXVWEyUmFUQ0FmdXhGSWxqKWhObEYkazAscD1kSHpiWmFwV0lrNGpVaE4rVXRlOXl0YWc5empmTUhnc3FtbWl6N0FuZFZRPQ==</response>',
+          '<success xmlns="urn:xmpp:sasl:2"><additional-data>dj1zbUY5cHFWOFM3c3VBb1pXamE0ZEpSa0ZzS1E9</additional-data><authorization-identifier>user@server</authorization-identifier></success>',
         ),
-    ]);
+      ]);
+      final conn =
+          XmppConnection(
+              TestingReconnectionPolicy(),
+              AlwaysConnectedConnectivityManager(),
+              ClientToServerNegotiator(),
+              fakeSocket,
+            )
+            ..connectionSettings = ConnectionSettings(
+              jid: JID.fromString('user@server'),
+              password: 'pencil',
+            );
+      await conn.registerManagers([
+        PresenceManager(),
+        RosterManager(TestingRosterStateManager('', [])),
+        DiscoManager([]),
+      ]);
+      await conn.registerFeatureNegotiators([
+        SaslPlainNegotiator(),
+        SaslScramNegotiator(
+          10,
+          'n=user,r=rOprNGfwEbeRWgbNEkqO',
+          'rOprNGfwEbeRWgbNEkqO',
+          ScramHashType.sha256,
+        ),
+        ResourceBindingNegotiator(),
+        Sasl2Negotiator()
+          ..userAgent = const UserAgent(
+            id: 'd4565fa7-4d72-4749-b3d3-740edbf87770',
+            software: 'moxxmpp',
+            device: "PapaTutuWawa's awesome device",
+          ),
+      ]);
 
-    final result = await conn.connect(
-      waitUntilLogin: true,
-      shouldReconnect: false,
-      enableReconnectOnSuccess: false,
-    );
-    expect(result.isType<NegotiatorError>(), true);
-    expect(result.get<NegotiatorError>() is InvalidServerSignatureError, true);
-  });
+      final result = await conn.connect(
+        waitUntilLogin: true,
+        shouldReconnect: false,
+        enableReconnectOnSuccess: false,
+      );
+      expect(result.isType<NegotiatorError>(), true);
+      expect(
+        result.get<NegotiatorError>() is InvalidServerSignatureError,
+        true,
+      );
+    },
+  );
 
   test('Test simple SASL2 inlining', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -409,17 +389,13 @@ void main() {
     <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind">
       <required/>
     </bind>
-  </stream:features>''',
-      ),
-      StanzaExpectation(
-        "<authenticate xmlns='urn:xmpp:sasl:2' mechanism='PLAIN'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>AHBvbHlub21kaXZpc2lvbgBhYWFh</initial-response><test-data-request xmlns='invalid:example:dont:use' /></authenticate>",
-        '''
+  </stream:features>'''),
+      StanzaExpectation("<authenticate xmlns='urn:xmpp:sasl:2' mechanism='PLAIN'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>AHBvbHlub21kaXZpc2lvbgBhYWFh</initial-response><test-data-request xmlns='invalid:example:dont:use' /></authenticate>", '''
 <success xmlns='urn:xmpp:sasl:2'>
   <authorization-identifier>polynomdivision@test.server</authorization-identifier>
   <test-data xmlns='invalid:example:dont:use'>Hello World</test-data>
 </success>
-        ''',
-      ),
+        '''),
       StanzaExpectation(
         "<iq xmlns='jabber:client' type='set' id='aaaa'><bind xmlns='urn:ietf:params:xml:ns:xmpp-bind' /></iq>",
         '''
@@ -472,9 +448,7 @@ void main() {
 
   test('Test simple SASL2 inlining 2', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -494,16 +468,12 @@ void main() {
     <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind">
       <required/>
     </bind>
-  </stream:features>''',
-      ),
-      StanzaExpectation(
-        "<authenticate xmlns='urn:xmpp:sasl:2' mechanism='PLAIN'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>AHBvbHlub21kaXZpc2lvbgBhYWFh</initial-response></authenticate>",
-        '''
+  </stream:features>'''),
+      StanzaExpectation("<authenticate xmlns='urn:xmpp:sasl:2' mechanism='PLAIN'><user-agent id='d4565fa7-4d72-4749-b3d3-740edbf87770'><software>moxxmpp</software><device>PapaTutuWawa's awesome device</device></user-agent><initial-response>AHBvbHlub21kaXZpc2lvbgBhYWFh</initial-response></authenticate>", '''
 <success xmlns='urn:xmpp:sasl:2'>
   <authorization-identifier>polynomdivision@test.server</authorization-identifier>
 </success>
-        ''',
-      ),
+        '''),
       StanzaExpectation(
         "<iq xmlns='jabber:client' type='set' id='aaaa'><bind xmlns='urn:ietf:params:xml:ns:xmpp-bind' /></iq>",
         '''

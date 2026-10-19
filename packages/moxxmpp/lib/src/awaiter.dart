@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:moxxmpp/src/jid.dart';
 import 'package:moxxmpp/src/stringxml.dart';
 import 'package:synchronized/synchronized.dart';

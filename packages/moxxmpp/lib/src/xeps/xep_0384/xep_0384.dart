@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:meta/meta.dart';
 import 'package:moxlib/moxlib.dart';
 import 'package:moxxmpp/src/events.dart';
@@ -32,8 +33,10 @@ typedef GetOmemoManagerCallback =
     Future<axolotl.AxolotlOmemoManager> Function();
 
 /// Whether a stanza should be encrypted.
-typedef ShouldEncryptStanzaCallback =
-    Future<bool> Function(JID toJid, Stanza stanza);
+typedef ShouldEncryptStanzaCallback = Future<bool> Function(
+  JID toJid,
+  Stanza stanza,
+);
 
 const _doNotEncryptList = [
   DoNotEncrypt('addresses', extendedAddressingXmlns),

@@ -44,16 +44,25 @@ class XMLNode {
     for (final attribute in element.attributes) {
       attributes[attribute.name.qualified] = attribute.value;
     }
+    // A prefixed element (`<sid:stanza-id/>`) has no `xmlns` attribute of its
+    // own; the namespace lives on the name. XEP matchers look up `xmlns`.
+    final ns = element.name.namespaceUri;
+    if (ns != null && ns.isNotEmpty) {
+      attributes.putIfAbsent('xmlns', () => ns);
+    }
+
+    // Keep `stream:features` qualified. Every other prefix is the local name
+    // plus the xmlns above, so `<sid:stanza-id/>` is found as `stanza-id`.
+    final prefix = element.name.prefix;
+    final tag = (prefix != null && prefix.isNotEmpty && prefix != 'stream')
+        ? element.name.local
+        : element.name.qualified;
 
     if (element.childElements.isEmpty) {
-      return XMLNode(
-        tag: element.name.qualified,
-        attributes: attributes,
-        text: element.innerText,
-      );
+      return XMLNode(tag: tag, attributes: attributes, text: element.innerText);
     } else {
       return XMLNode(
-        tag: element.name.qualified,
+        tag: tag,
         attributes: attributes,
         children: element.childElements
             .toList()

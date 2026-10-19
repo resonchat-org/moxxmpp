@@ -29,6 +29,7 @@ const emeManager = 'org.moxxmpp.ememanager';
 const cryptographicHashManager = 'org.moxxmpp.cryptographichashmanager';
 const delayedDeliveryManager = 'org.moxxmpp.delayeddeliverymanager';
 const messageRetractionManager = 'org.moxxmpp.messageretractionmanager';
+const messageModerationManager = 'org.moxxmpp.messagemoderationmanager';
 const lastMessageCorrectionManager = 'org.moxxmpp.lastmessagecorrectionmanager';
 const messageReactionsManager = 'org.moxxmpp.messagereactionsmanager';
 const stickersManager = 'org.moxxmpp.stickersmanager';

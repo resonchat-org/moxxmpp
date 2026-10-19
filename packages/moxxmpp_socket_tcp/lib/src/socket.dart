@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:moxxmpp/moxxmpp.dart';
@@ -12,18 +13,20 @@ import 'package:moxxmpp_socket_tcp/src/rfc_2782.dart';
 ///
 /// Injected by apps that need SOCKS5 / Tor (Conversations-style unified
 /// network path) so every XMPP hop goes through the same connector.
-typedef TcpSocketConnect =
-    Future<Socket> Function(String host, int port, {Duration? timeout});
+typedef TcpSocketConnect = Future<Socket> Function(
+  String host,
+  int port, {
+  Duration? timeout,
+});
 
 /// Upgrades a plain [Socket] to TLS (inject when [connectSocket] returns a
 /// wrapper that [SecureSocket.secure] cannot unwrap).
-typedef TcpSocketSecure =
-    Future<SecureSocket> Function(
-      Socket socket, {
-      dynamic host,
-      List<String>? supportedProtocols,
-      bool Function(X509Certificate certificate)? onBadCertificate,
-    });
+typedef TcpSocketSecure = Future<SecureSocket> Function(
+  Socket socket, {
+  dynamic host,
+  List<String>? supportedProtocols,
+  bool Function(X509Certificate certificate)? onBadCertificate,
+});
 
 /// TCP socket implementation for XmppConnection
 class TCPSocketWrapper extends BaseSocketWrapper {

@@ -98,6 +98,7 @@ export 'package:moxxmpp/src/xeps/xep_0388/xep_0388.dart';
 export 'package:moxxmpp/src/xeps/xep_0402.dart';
 export 'package:moxxmpp/src/xeps/xep_0421.dart';
 export 'package:moxxmpp/src/xeps/xep_0424.dart';
+export 'package:moxxmpp/src/xeps/xep_0425.dart';
 export 'package:moxxmpp/src/xeps/xep_0444.dart';
 export 'package:moxxmpp/src/xeps/xep_0446.dart';
 export 'package:moxxmpp/src/xeps/xep_0447.dart';

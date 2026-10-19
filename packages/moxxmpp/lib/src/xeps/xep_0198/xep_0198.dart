@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+
 import 'package:meta/meta.dart';
 import 'package:moxxmpp/src/connection.dart';
 import 'package:moxxmpp/src/events.dart';

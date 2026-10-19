@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:moxxmpp/moxxmpp.dart';
 import 'package:test/test.dart';
+
 import 'helpers/logging.dart';
 import 'helpers/xmpp.dart';
 
@@ -40,15 +42,14 @@ Future<bool> testRosterManager(
   final roster = RosterManager(TestingRosterStateManager('', []))
     ..register(
       XmppManagerAttributes(
-        sendStanza:
-            (
-              _, {
-              bool addId = true,
-              bool retransmitted = false,
-              bool awaitable = true,
-              bool encrypted = false,
-              bool forceEncryption = false,
-            }) async => XMLNode(tag: 'hallo'),
+        sendStanza: (
+          _, {
+          bool addId = true,
+          bool retransmitted = false,
+          bool awaitable = true,
+          bool encrypted = false,
+          bool forceEncryption = false,
+        }) async => XMLNode(tag: 'hallo'),
         sendEvent: (event) {
           eventTriggered = true;
         },
@@ -88,9 +89,7 @@ void main() {
 
   test('Test a successful login attempt with no SM', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -101,15 +100,12 @@ void main() {
     <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
       <mechanism>PLAIN</mechanism>
     </mechanisms>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
       StringExpectation(
         "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>AHBvbHlub21kaXZpc2lvbgBhYWFh</auth>",
         '<success xmlns="urn:ietf:params:xml:ns:xmpp-sasl" />',
       ),
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -126,8 +122,7 @@ void main() {
     <csi xmlns="urn:xmpp:csi:0"/>
     <sm xmlns="urn:xmpp:sm:3"/>
   </stream:features>
-''',
-      ),
+'''),
       StanzaExpectation(
         '<iq xmlns="jabber:client" type="set" id="a"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"/></iq>',
         '<iq xmlns="jabber:client" type="result" id="a"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><jid>polynomdivision@test.server/MU29eEZn</jid></bind></iq>',
@@ -165,9 +160,7 @@ void main() {
 
   test('Test a failed SASL auth', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -178,8 +171,7 @@ void main() {
     <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
       <mechanism>PLAIN</mechanism>
     </mechanisms>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
       StringExpectation(
         "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>AHBvbHlub21kaXZpc2lvbgBhYWFh</auth>",
         '<failure xmlns="urn:ietf:params:xml:ns:xmpp-sasl"><not-authorized /></failure>',
@@ -218,9 +210,7 @@ void main() {
 
   test('Test another failed SASL auth', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -231,8 +221,7 @@ void main() {
     <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
       <mechanism>PLAIN</mechanism>
     </mechanisms>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
       StringExpectation(
         "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>AHBvbHlub21kaXZpc2lvbgBhYWFh</auth>",
         '<failure xmlns="urn:ietf:params:xml:ns:xmpp-sasl"><mechanism-too-weak /></failure>',
@@ -275,15 +264,14 @@ void main() {
       final roster = RosterManager(TestingRosterStateManager('', []))
         ..register(
           XmppManagerAttributes(
-            sendStanza:
-                (
-                  _, {
-                  bool addId = true,
-                  bool retransmitted = false,
-                  bool awaitable = true,
-                  bool encrypted = false,
-                  bool forceEncryption = false,
-                }) async => XMLNode(tag: 'hallo'),
+            sendStanza: (
+              _, {
+              bool addId = true,
+              bool retransmitted = false,
+              bool awaitable = true,
+              bool encrypted = false,
+              bool forceEncryption = false,
+            }) async => XMLNode(tag: 'hallo'),
             sendEvent: (event) {
               eventTriggered = true;
             },
@@ -340,41 +328,36 @@ void main() {
         reason: 'Roster pushes from our bare JID should be accepted',
       );
     });
-    test(
-      'The manager should accept pushes from a jid that, if the resource is stripped, is our bare jid',
-      () async {
-        final result1 = await testRosterManager(
-          'test.user@server.example',
-          'aaaaa',
-          "<iq from='test.user@server.example/aaaaa' type='result' id='82c2aa1e-cac3-4f62-9e1f-bbe6b057daf3' to='test.user@server.example/aaaaa' xmlns='jabber:client'><query ver='64' xmlns='jabber:iq:roster'><item jid='some.other.user@server.example' subscription='to' /></query></iq>",
-        );
-        expect(
-          result1,
-          true,
-          reason:
-              'Roster pushes should be accepted if the bare JIDs are the same',
-        );
+    test('The manager should accept pushes from a jid that, if the resource is stripped, is our bare jid', () async {
+      final result1 = await testRosterManager(
+        'test.user@server.example',
+        'aaaaa',
+        "<iq from='test.user@server.example/aaaaa' type='result' id='82c2aa1e-cac3-4f62-9e1f-bbe6b057daf3' to='test.user@server.example/aaaaa' xmlns='jabber:client'><query ver='64' xmlns='jabber:iq:roster'><item jid='some.other.user@server.example' subscription='to' /></query></iq>",
+      );
+      expect(
+        result1,
+        true,
+        reason:
+            'Roster pushes should be accepted if the bare JIDs are the same',
+      );
 
-        final result2 = await testRosterManager(
-          'test.user@server.example',
-          'aaaaa',
-          "<iq from='test.user@server.example/bbbbb' type='result' id='82c2aa1e-cac3-4f62-9e1f-bbe6b057daf3' to='test.user@server.example/aaaaa' xmlns='jabber:client'><query ver='64' xmlns='jabber:iq:roster'><item jid='some.other.user@server.example' subscription='to' /></query></iq>",
-        );
-        expect(
-          result2,
-          true,
-          reason:
-              'Roster pushes should be accepted if the bare JIDs are the same',
-        );
-      },
-    );
+      final result2 = await testRosterManager(
+        'test.user@server.example',
+        'aaaaa',
+        "<iq from='test.user@server.example/bbbbb' type='result' id='82c2aa1e-cac3-4f62-9e1f-bbe6b057daf3' to='test.user@server.example/aaaaa' xmlns='jabber:client'><query ver='64' xmlns='jabber:iq:roster'><item jid='some.other.user@server.example' subscription='to' /></query></iq>",
+      );
+      expect(
+        result2,
+        true,
+        reason:
+            'Roster pushes should be accepted if the bare JIDs are the same',
+      );
+    });
   });
 
   test('Test failing due to the server only allowing SASL PLAIN', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -385,8 +368,7 @@ void main() {
     <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
       <mechanism>PLAIN</mechanism>
     </mechanisms>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
     ]);
 
     final conn =
@@ -420,9 +402,7 @@ void main() {
 
   test('Test losing the connection while negotiation', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -433,15 +413,12 @@ void main() {
     <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
       <mechanism>PLAIN</mechanism>
     </mechanisms>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
       StringExpectation(
         "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>AHRlc3R1c2VyAGFiYzEyMw==</auth>",
         '',
       ),
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -452,15 +429,12 @@ void main() {
     <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
       <mechanism>PLAIN</mechanism>
     </mechanisms>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
       StringExpectation(
         "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>AHRlc3R1c2VyAGFiYzEyMw==</auth>",
         '<success xmlns="urn:ietf:params:xml:ns:xmpp-sasl" />',
       ),
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -471,8 +445,7 @@ void main() {
     <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind">
       <required/>
     </bind>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
       StanzaExpectation(
         '<iq xmlns="jabber:client" type="set" id="a"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"/></iq>',
         '<iq xmlns="jabber:client" type="result" id="a"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><jid>testuser@example.org/MU29eEZn</jid></bind></iq>',
@@ -515,9 +488,7 @@ void main() {
 
   test('Test an invalid XML continuation', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -527,11 +498,8 @@ void main() {
   <stream:features xmlns="http://etherx.jabber.org/streams">
     <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
       <mechanism>PLAIN</mechanism>
-    </mechanisms''',
-      ),
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>",
-        '''
+    </mechanisms'''),
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -542,15 +510,12 @@ void main() {
     <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
       <mechanism>PLAIN</mechanism>
     </mechanisms>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
       StringExpectation(
         "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>AHRlc3R1c2VyAGFiYzEyMw==</auth>",
         '<success xmlns="urn:ietf:params:xml:ns:xmpp-sasl" />',
       ),
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='example.org' from='testuser@example.org' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -561,8 +526,7 @@ void main() {
     <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind">
       <required/>
     </bind>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
       StanzaExpectation(
         '<iq xmlns="jabber:client" type="set" id="a"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"/></iq>',
         '<iq xmlns="jabber:client" type="result" id="a"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><jid>testuser@example.org/MU29eEZn</jid></bind></iq>',
@@ -601,9 +565,7 @@ void main() {
 
   test('Test sending stanzas while offline', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -614,15 +576,12 @@ void main() {
     <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
       <mechanism>PLAIN</mechanism>
     </mechanisms>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
       StringExpectation(
         "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>AHBvbHlub21kaXZpc2lvbgBhYWFh</auth>",
         '<success xmlns="urn:ietf:params:xml:ns:xmpp-sasl" />',
       ),
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -639,16 +598,13 @@ void main() {
     <csi xmlns="urn:xmpp:csi:0"/>
     <sm xmlns="urn:xmpp:sm:3"/>
   </stream:features>
-''',
-      ),
+'''),
       StanzaExpectation(
         '<iq xmlns="jabber:client" type="set" id="a"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"/></iq>',
         '<iq xmlns="jabber:client" type="result" id="a"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><jid>polynomdivision@test.server/MU29eEZn</jid></bind></iq>',
         ignoreId: true,
       ),
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -659,15 +615,12 @@ void main() {
     <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
       <mechanism>PLAIN</mechanism>
     </mechanisms>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
       StringExpectation(
         "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>AHBvbHlub21kaXZpc2lvbgBhYWFh</auth>",
         '<success xmlns="urn:ietf:params:xml:ns:xmpp-sasl" />',
       ),
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -684,8 +637,7 @@ void main() {
     <csi xmlns="urn:xmpp:csi:0"/>
     <sm xmlns="urn:xmpp:sm:3"/>
   </stream:features>
-''',
-      ),
+'''),
       StanzaExpectation(
         '<iq xmlns="jabber:client" type="set" id="a"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"/></iq>',
         '<iq xmlns="jabber:client" type="result" id="a"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><jid>polynomdivision@test.server/MU29eEZn</jid></bind></iq>',

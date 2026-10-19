@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:moxxmpp/src/connection.dart';
 import 'package:moxxmpp/src/connectivity.dart';
 import 'package:moxxmpp/src/events.dart';

@@ -1,5 +1,6 @@
 import 'package:moxxmpp/moxxmpp.dart';
 import 'package:test/test.dart';
+
 import '../helpers/logging.dart';
 import '../helpers/xmpp.dart';
 
@@ -37,15 +38,14 @@ void main() {
       CSIManager()
         ..register(
           XmppManagerAttributes(
-            sendStanza:
-                (
-                  _, {
-                  bool addId = true,
-                  bool retransmitted = false,
-                  bool awaitable = true,
-                  bool encrypted = false,
-                  bool forceEncryption = false,
-                }) async => XMLNode(tag: 'hallo'),
+            sendStanza: (
+              _, {
+              bool addId = true,
+              bool retransmitted = false,
+              bool awaitable = true,
+              bool encrypted = false,
+              bool forceEncryption = false,
+            }) async => XMLNode(tag: 'hallo'),
             sendEvent: (event) {},
             sendNonza: (nonza) {
               nonzaSent = true;
@@ -75,15 +75,14 @@ void main() {
       CSIManager()
         ..register(
           XmppManagerAttributes(
-            sendStanza:
-                (
-                  _, {
-                  bool addId = true,
-                  bool retransmitted = false,
-                  bool awaitable = true,
-                  bool encrypted = false,
-                  bool forceEncryption = false,
-                }) async => XMLNode(tag: 'hallo'),
+            sendStanza: (
+              _, {
+              bool addId = true,
+              bool retransmitted = false,
+              bool awaitable = true,
+              bool encrypted = false,
+              bool forceEncryption = false,
+            }) async => XMLNode(tag: 'hallo'),
             sendEvent: (event) {},
             sendNonza: (nonza) {
               expect(
@@ -115,9 +114,7 @@ void main() {
 
   test('Test CSI with Bind2', () async {
     final fakeSocket = StubTCPSocket([
-      StringExpectation(
-        "<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>",
-        '''
+      StringExpectation("<stream:stream xmlns='jabber:client' version='1.0' xmlns:stream='http://etherx.jabber.org/streams' to='test.server' from='polynomdivision@test.server' xml:lang='en'>", '''
 <stream:stream
     xmlns="jabber:client"
     version="1.0"
@@ -141,8 +138,7 @@ void main() {
     <bind xmlns="urn:ietf:params:xml:ns:xmpp-bind">
       <required/>
     </bind>
-  </stream:features>''',
-      ),
+  </stream:features>'''),
       StanzaExpectation(
         '''
 <authenticate xmlns='urn:xmpp:sasl:2' mechanism='PLAIN'>

@@ -186,11 +186,11 @@ const sceXmlns = 'urn:xmpp:sce:1';
 // XEP-0421
 const occupantIdXmlns = 'urn:xmpp:occupant-id:0';
 
-// XEP-0422
-const fasteningXmlns = 'urn:xmpp:fasten:0';
-
 // XEP-0424
-const messageRetractionXmlns = 'urn:xmpp:message-retract:0';
+const messageRetractionXmlns = 'urn:xmpp:message-retract:1';
+
+// XEP-0425 (Moderated Message Retraction). Advertised by the room, not the client.
+const messageModerateXmlns = 'urn:xmpp:message-moderate:1';
 
 // XEP-0428
 const fallbackIndicationXmlns = 'urn:xmpp:fallback:0';

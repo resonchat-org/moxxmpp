@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:logging/logging.dart';
 import 'package:moxlib/moxlib.dart';
 import 'package:moxxmpp/src/events.dart';

@@ -23,8 +23,9 @@ extension StringToJid on String {
 /// A callback that is called whenever a message is sent using
 /// [MessageManager.sendMessage]. The input the typed map that is passed to
 /// sendMessage.
-typedef MessageSendingCallback =
-    List<XMLNode> Function(TypedMap<StanzaHandlerExtension>);
+typedef MessageSendingCallback = List<XMLNode> Function(
+  TypedMap<StanzaHandlerExtension>,
+);
 
 /// The raw content of the <body /> element.
 class MessageBodyData implements StanzaHandlerExtension {

@@ -1,6 +1,7 @@
 import 'package:moxxmpp/moxxmpp.dart';
 import 'package:test/test.dart';
 import 'package:xml/xml.dart';
+
 import 'helpers/xml.dart';
 
 void main() {
