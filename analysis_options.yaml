@@ -6,8 +6,15 @@ linter:
     use_setters_to_change_properties: false
     avoid_positional_boolean_parameters: false
     avoid_bool_literals_in_conditional_expressions: false
+    # import_sorter keeps this package in its own section. This lint has no
+    # setting for that, and it flags the blank line.
+    directives_ordering: false
 
 analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    # Separate packages. Their own pubspecs supply Flutter and moxdns;
+    # analyzing them as this library cannot resolve those.
+    - "example_flutter/**"
+    - "integration_tests/**"

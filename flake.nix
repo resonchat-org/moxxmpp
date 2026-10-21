@@ -115,7 +115,7 @@
       regenerateNixPackage = let
         script = pkgs.writeShellScript "regenerate-nix-package.sh" ''
           set -e
-          ${pythonEnv}/bin/python ./scripts/pubspec2lock.py ./packages/moxxmpp/pubspec.lock ./nix/moxxmpp.lock
+          ${pythonEnv}/bin/python ./scripts/pubspec2lock.py ./pubspec.lock ./nix/moxxmpp.lock
           ${pythonEnv}/bin/python ./scripts/lock2nix.py ./nix/moxxmpp.lock ./nix/pubcache.moxxmpp.nix moxxmpp
         '';
       in {

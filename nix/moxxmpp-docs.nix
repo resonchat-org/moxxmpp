@@ -11,7 +11,7 @@ stdenv.mkDerivation {
 
   PUB_CACHE = "${pubCache}";
   
-  src = "${./..}/packages/moxxmpp";
+  src = "${./..}";
 
   buildPhase = ''
     runHook preBuild

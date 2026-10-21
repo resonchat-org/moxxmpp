@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:moxdns/moxdns.dart';
 import 'package:moxxmpp/moxxmpp.dart';
-import 'package:moxxmpp_socket_tcp/moxxmpp_socket_tcp.dart';
+import 'package:moxxmpp/socket_tcp.dart';
 
 class ExampleTcpSocketWrapper extends TCPSocketWrapper {
-  ExampleTcpSocketWrapper() : super();
+  ExampleTcpSocketWrapper() : super(false);
 
   @override
   Future<List<MoxSrvRecord>> srvQuery(String domain, bool dnssec) async {
@@ -65,7 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // The below causes the app to crash.
     //ExampleTcpSocketWrapper(),
     // In a production app, the below should be false.
-    TCPSocketWrapper(),
+    TCPSocketWrapper(false),
   );
   TextEditingController jidController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
