@@ -34,7 +34,11 @@ class ReplyData implements StanzaHandlerExtension {
   /// The end of the fallback body (exclusive)
   final int? end;
 
-  /// The body of the message.
+  /// The (wire) body associated with this reply, when known.
+  ///
+  /// On receive, this is the message's `<body/>`. On send it is optional
+  /// metadata for [withoutFallback] — the stanza body itself must come from
+  /// [MessageBodyData], never from this field (Conversations sends one body).
   final String? body;
 
   /// Applies the metadata to the received body [body] in order to remove the fallback.
@@ -98,6 +102,9 @@ class MessageRepliesManager extends XmppManagerBase {
     if (data == null) {
       return [];
     }
+    // Only <reply> and <fallback>. The message body is owned by
+    // MessageBodyData (MessageManager) — emitting another <body/> here
+    // duplicated Conversations' single body and broke last-body clients.
     return [
       XMLNode.xmlns(
         tag: 'reply',
@@ -109,8 +116,7 @@ class MessageRepliesManager extends XmppManagerBase {
           'id': data.id,
         },
       ),
-      if (data.body != null) XMLNode(tag: 'body', text: data.body),
-      if (data.body != null)
+      if (data.start != null && data.end != null)
         XMLNode.xmlns(
           tag: 'fallback',
           xmlns: fallbackIndicationXmlns,

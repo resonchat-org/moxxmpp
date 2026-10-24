@@ -127,9 +127,10 @@ class MessageManager extends XmppManagerBase {
   List<XMLNode> _messageSendingCallback(
     TypedMap<StanzaHandlerExtension> extensions,
   ) {
-    if (extensions.get<ReplyData>() != null) {
-      return [];
-    }
+    // ReplyData must not suppress the body: XEP-0461 / Conversations put the
+    // quote fallback *inside* the single <body/>, with <reply/> + <fallback/>
+    // beside it. (Older moxxmpp skipped MessageBodyData when ReplyData was
+    // present and let MessageRepliesManager emit a second body.)
     if (extensions.get<StickersData>() != null) {
       return [];
     }

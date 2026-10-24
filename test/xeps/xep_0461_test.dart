@@ -44,24 +44,26 @@ void main() {
   });
 
   test('Test calling the message sending callback', () {
+    final quote = QuoteData.fromBodies('Hello world', 'How are you doing?');
     final result = MessageRepliesManager().messageSendingCallback(
       TypedMap()..set(
         ReplyData.fromQuoteData(
           'some-random-id',
-          QuoteData.fromBodies('Hello world', 'How are you doing?'),
+          quote,
           jid: JID.fromString('quoted-user@example.org'),
         ),
       ),
     );
 
     final reply = result.firstWhere((e) => e.tag == 'reply');
-    final body = result.firstWhere((e) => e.tag == 'body');
     final fallback = result.firstWhere((e) => e.tag == 'fallback');
 
     expect(reply.attributes['to'], 'quoted-user@example.org');
-    expect(body.innerText(), '> Hello world\nHow are you doing?');
+    // Body is MessageBodyData's job — ReplyData must not emit a second one.
+    expect(result.where((e) => e.tag == 'body'), isEmpty);
     expect(fallback.children.first.attributes['start'], '0');
     expect(fallback.children.first.attributes['end'], '14');
+    expect(quote.body, '> Hello world\nHow are you doing?');
   });
 
   test('Test parsing a reply without fallback', () async {
