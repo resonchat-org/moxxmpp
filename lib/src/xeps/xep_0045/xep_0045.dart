@@ -192,6 +192,12 @@ class MUCManager extends XmppManagerBase {
     String nick,
     int? maxHistoryStanzas,
   ) async {
+    // Always include <history/>: omitting it lets the MUC push its default
+    // discussion history. Conversations uses maxstanzas=0 when MAM is used;
+    // Gajim always sends maxchars=0. null → maxchars=0 (empty declaration).
+    final historyAttrs = maxHistoryStanzas != null
+        ? <String, String>{'maxstanzas': maxHistoryStanzas.toString()}
+        : <String, String>{'maxchars': '0'};
     await getAttributes().sendStanza(
       StanzaDetails(
         Stanza.presence(
@@ -200,13 +206,7 @@ class MUCManager extends XmppManagerBase {
             XMLNode.xmlns(
               tag: 'x',
               xmlns: mucXmlns,
-              children: [
-                if (maxHistoryStanzas != null)
-                  XMLNode(
-                    tag: 'history',
-                    attributes: {'maxstanzas': maxHistoryStanzas.toString()},
-                  ),
-              ],
+              children: [XMLNode(tag: 'history', attributes: historyAttrs)],
             ),
           ],
         ),

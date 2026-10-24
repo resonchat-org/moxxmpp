@@ -70,6 +70,8 @@ class BlockingManager extends XmppManagerBase {
       ),
     );
 
+    // RFC 6120: every IQ get/set needs a response. nbxmpp/Gajim reply here.
+    await reply(state, 'result', []);
     return state..done = true;
   }
 
@@ -90,6 +92,7 @@ class BlockingManager extends XmppManagerBase {
       getAttributes().sendEvent(BlocklistUnblockAllPushEvent());
     }
 
+    await reply(state, 'result', []);
     return state..done = true;
   }
 

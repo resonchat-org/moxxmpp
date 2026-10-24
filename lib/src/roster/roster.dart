@@ -143,10 +143,12 @@ class RosterManager extends XmppManagerBase {
     // Only allow the push if the from attribute is either
     // - empty, i.e. not set
     // - a full JID of our own
+    // Conversations RosterManager.push: non-server → sendErrorFor(Forbidden).
     if (from != null && JID.fromString(from).toBare() != selfJid) {
       logger.warning(
         'Roster push invalid! Unexpected from attribute: ${stanza.toXml()}',
       );
+      await reply(state, 'error', [buildErrorElement('auth', 'forbidden')]);
       return state..done = true;
     }
 
