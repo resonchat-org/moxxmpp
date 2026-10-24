@@ -445,7 +445,12 @@ class StreamManagementManager extends XmppManagerBase {
         // Prevent an E2EE message being encrypted again
         state.encrypted,
       );
-      await _sendAckRequest();
+      // Conversations only sends <r/> after outbound *messages* (plus
+      // enable/resume/ping). Requesting ack after every IQ/presence doubles
+      // nonza traffic during connect bursts and looks spammy.
+      if (stanza.tag == 'message' && stanza.id != null) {
+        await _sendAckRequest();
+      }
     }
 
     return state;
