@@ -29,13 +29,21 @@ typedef MessageSendingCallback =
 
 /// The raw content of the <body /> element.
 class MessageBodyData implements StanzaHandlerExtension {
-  const MessageBodyData(this.body);
+  const MessageBodyData(this.body, {this.xmlLang});
 
   /// The content of the <body /> element.
   final String? body;
 
+  /// RFC 6120 `xml:lang` on this body, when the sender knows it.
+  final String? xmlLang;
+
   XMLNode toXML() {
-    return XMLNode(tag: 'body', text: body);
+    final lang = xmlLang?.trim();
+    return XMLNode(
+      tag: 'body',
+      text: body,
+      attributes: {if (lang != null && lang.isNotEmpty) 'xml:lang': lang},
+    );
   }
 }
 
@@ -77,9 +85,14 @@ class MessageManager extends XmppManagerBase {
     Stanza stanza,
     StanzaHandlerData state,
   ) async {
-    final body = stanza.firstTag('body');
-    if (body != null) {
-      state.extensions.set(MessageBodyData(body.innerText()));
+    // XEP-0171 may already have chosen the source body among several
+    // `<body xml:lang>` elements. Do not replace that with whichever
+    // body happens to be first.
+    if (state.extensions.get<MessageBodyData>() == null) {
+      final body = stanza.firstTag('body');
+      if (body != null) {
+        state.extensions.set(MessageBodyData(body.innerText()));
+      }
     }
 
     getAttributes().sendEvent(

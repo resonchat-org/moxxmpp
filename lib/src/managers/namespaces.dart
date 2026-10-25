@@ -18,6 +18,7 @@ const chatMarkerManager = 'org.moxxmpp.chatmarkermanager';
 const oobManager = 'org.moxxmpp.oobmanager';
 const sfsManager = 'org.moxxmpp.sfsmanager';
 const messageRepliesManager = 'org.moxxmpp.messagerepliesmanager';
+const languageTranslationManager = 'org.moxxmpp.languagetranslationmanager';
 const blockingManager = 'org.moxxmpp.blockingmanager';
 const httpFileUploadManager = 'org.moxxmpp.httpfileuploadmanager';
 const chatStateManager = 'org.moxxmpp.chatstatemanager';
