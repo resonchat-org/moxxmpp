@@ -5,6 +5,7 @@ import 'package:moxxmpp/src/xeps/xep_0300.dart';
 
 class FileMetadataData {
   const FileMetadataData({
+    required this.thumbnails,
     this.mediaType,
     this.width,
     this.height,
@@ -12,7 +13,6 @@ class FileMetadataData {
     this.length,
     this.name,
     this.size,
-    required this.thumbnails,
     Map<HashFunction, String>? hashes,
   }) : hashes = hashes ?? const {};
 

@@ -89,7 +89,6 @@ class ComponentToServerNegotiator extends NegotiationsHandler {
           log.severe('Unexpected data received');
           await handleError(UnexpectedDataError());
         }
-        break;
       case ComponentToServerState.handshakeSent:
         if (event is XMPPStreamElement) {
           if (event.node.tag == 'handshake' &&
@@ -105,7 +104,6 @@ class ComponentToServerNegotiator extends NegotiationsHandler {
           log.severe('Unexpected data received');
           await handleError(UnexpectedDataError());
         }
-        break;
     }
   }
 

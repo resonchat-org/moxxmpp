@@ -182,9 +182,10 @@ void main() {
         StreamManagementEnabledEvent(resource: 'hallo'),
       );
 
-      // Send a stanza 5 times
+      // <r/> is requested only for a message that already has an id.
+      final message = stanza.copyWith(id: 'm1');
       for (var i = 0; i < 5; i++) {
-        await runOutgoingStanzaHandlers(manager, stanza);
+        await runOutgoingStanzaHandlers(manager, message);
       }
       expect(await manager.getPendingAcks(), 5);
 
@@ -199,15 +200,18 @@ void main() {
         StreamManagementEnabledEvent(resource: 'hallo'),
       );
 
-      // Send a stanza 5 times
+      final message = stanza.copyWith(id: 'm1');
       for (var i = 0; i < 5; i++) {
-        await runOutgoingStanzaHandlers(manager, stanza);
+        await runOutgoingStanzaHandlers(manager, message);
       }
       expect(await manager.getPendingAcks(), 5);
 
       // Ack only 3 of them at once
       await manager.runNonzaHandlers(mkAck(3));
       expect(await manager.getPendingAcks(), 2);
+
+      // Drain the remainder so the ack timer does not outlive the test.
+      await manager.runNonzaHandlers(mkAck(5));
     });
 
     test('Test counting incoming stanzas for which handlers end early', () async {
@@ -371,10 +375,6 @@ void main() {
           "<presence xmlns='jabber:client'><show>chat</show></presence>",
           '<iq type="result" />',
         ),
-        StringExpectation(
-          "<r xmlns='urn:xmpp:sm:3' />",
-          "<a xmlns='urn:xmpp:sm:3' h='1' />",
-        ),
         StanzaExpectation(
           "<iq to='user@example.com' type='get' id='a' xmlns='jabber:client' />",
           "<iq from='user@example.com' type='result' id='a' />",
@@ -409,7 +409,7 @@ void main() {
       await conn.connect(waitUntilLogin: true);
 
       await Future<void>.delayed(const Duration(seconds: 3));
-      expect(fakeSocket.getState(), 7);
+      expect(fakeSocket.getState(), 6);
       expect(await conn.getConnectionState(), XmppConnectionState.connected);
       expect(
         conn
@@ -652,7 +652,7 @@ void main() {
         "<resumed xmlns='urn:xmpp:sm:3' h='id-1' h='12' />",
       ),
       StanzaExpectation(
-        "<iq to='localhost' type='get' xmlns='jabber:client' />",
+        "<message to='localhost' xmlns='jabber:client' />",
         '',
         ignoreId: true,
       ),
@@ -702,7 +702,7 @@ void main() {
         "<resumed xmlns='urn:xmpp:sm:3' h='id-1' h='12' />",
       ),
       StanzaExpectation(
-        "<iq to='localhost' type='get' xmlns='jabber:client' />",
+        "<message to='localhost' xmlns='jabber:client' />",
         '',
         ignoreId: true,
       ),
@@ -737,9 +737,11 @@ void main() {
     expect(fakeSocket.getState(), 4);
     expect(await conn.getConnectionState(), XmppConnectionState.connected);
 
-    // Send a bogus stanza
+    // A message with an id is what requests <r/>. An IQ does not.
     unawaited(
-      conn.sendStanza(StanzaDetails(Stanza.iq(to: 'localhost', type: 'get'))),
+      conn.sendStanza(
+        StanzaDetails(Stanza.message(to: 'localhost', id: 'msg-1')),
+      ),
     );
 
     await Future<void>.delayed(const Duration(seconds: 5));

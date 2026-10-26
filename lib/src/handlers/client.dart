@@ -179,7 +179,6 @@ class ClientToServerNegotiator extends NegotiationsHandler {
             await _executeCurrentNegotiator(fakeStanza);
           }
         }
-        break;
       case NegotiatorState.retryLater:
         log.finest('Negotiator wants to continue later. Picking new one...');
         _currentNegotiator!.state = NegotiatorState.ready;
@@ -199,14 +198,12 @@ class ClientToServerNegotiator extends NegotiationsHandler {
           );
           await _executeCurrentNegotiator(fakeStanza);
         }
-        break;
       case NegotiatorState.skipRest:
         log.finest(
           'Negotiator wants to skip the remaining negotiation... Negotiations (assumed) done!',
         );
 
         await onNegotiationsDone();
-        break;
     }
   }
 

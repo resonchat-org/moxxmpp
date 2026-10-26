@@ -204,15 +204,12 @@ class StreamManagementManager extends XmppManagerBase {
           if (!_streamResumed) {
             await _resendStanzas();
           }
-          break;
         case XmppConnectionState.error:
         case XmppConnectionState.notConnected:
           _stopAckTimer();
-          break;
         case XmppConnectionState.connecting:
           _stopAckTimer();
           // NOOP
-          break;
       }
     }
   }

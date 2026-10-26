@@ -164,4 +164,45 @@ void main() {
 
     expect(compareXMLNodes(node1, node2), false);
   });
+
+  test('a prefixed xmlns still matches the element', () {
+    // Room stanza-ids often arrive as xmlns:sid='urn:xmpp:sid:0' with a
+    // sid: prefix. Looking up by the namespace, not the prefix, is what
+    // makes that id visible.
+    final node = XMLNode.fromString(
+      "<message xmlns='jabber:client' xmlns:sid='urn:xmpp:sid:0' "
+      "from='room@conf.example/nick' type='groupchat'> "
+      "<sid:stanza-id id='room-1' by='room@conf.example'/> "
+      "<sid:origin-id id='origin-1'/> "
+      '</message>',
+    );
+
+    final stanzaId = node.firstTag('stanza-id', xmlns: stableIdXmlns);
+    expect(stanzaId?.attributes['id'], 'room-1');
+    expect(stanzaId?.attributes['by'], 'room@conf.example');
+    expect(
+      node.firstTag('origin-id', xmlns: stableIdXmlns)?.attributes['id'],
+      'origin-1',
+    );
+  });
+
+  test('an unprefixed element in the same namespace matches too', () {
+    final node = XMLNode.fromString(
+      "<message xmlns='jabber:client' from='room@conf.example/nick' "
+      "type='groupchat'> "
+      "<stanza-id xmlns='urn:xmpp:sid:0' id='room-1' by='room@conf.example'/> "
+      '</message>',
+    );
+    expect(
+      node.firstTag('stanza-id', xmlns: stableIdXmlns)?.attributes['id'],
+      'room-1',
+    );
+  });
+
+  test('a prefixed tag keeps its qualified name', () {
+    final node = XMLNode.fromString(
+      "<stream:features xmlns:stream='http://etherx.jabber.org/streams'/>",
+    );
+    expect(node.tag, 'stream:features');
+  });
 }

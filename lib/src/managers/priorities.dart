@@ -47,7 +47,7 @@ const int omemoOutgoingEncryptPriority = 100;
 /// XEP-0384 classic OMEMO: inbound decrypt (explicit default priority).
 const int omemoIncomingDecryptPriority = 0;
 
-/// [StanzaHandler] constructor default when [priority] is omitted.
+/// `StanzaHandler` constructor default when `priority` is omitted.
 const int stanzaHandlerDefaultPriority = 0;
 
 /// Message extensions that must run *after* the common −99 parsers (e.g. SFS).
@@ -56,10 +56,10 @@ const int messageExtensionLatePriority = -98;
 /// Typical inbound message extension parsers (receipts, chat states, …).
 ///
 /// Must be greater than [messageHandlerPriority] so they run before
-/// [MessageManager] terminates processing.
+/// `MessageManager` terminates processing.
 const int messageExtensionPriority = -99;
 
-/// [MessageManager] inbound message handler (terminates the message pipeline).
+/// `MessageManager` inbound message handler (terminates the message pipeline).
 const int messageHandlerPriority = -100;
 
 /// Typical presence extension parsers (caps, MUC).
@@ -67,5 +67,5 @@ const int messageHandlerPriority = -100;
 /// Must be greater than [presenceHandlerPriority].
 const int presenceExtensionPriority = -99;
 
-/// [PresenceManager] inbound presence handler (terminates the presence pipeline).
+/// `PresenceManager` inbound presence handler (terminates the presence pipeline).
 const int presenceHandlerPriority = -100;

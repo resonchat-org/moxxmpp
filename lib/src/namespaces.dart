@@ -41,6 +41,9 @@ const mucOwnerXmlns = 'http://jabber.org/protocol/muc#owner';
 const roomInfoFormType = 'http://jabber.org/protocol/muc#roominfo';
 const roomConfigFormType = 'http://jabber.org/protocol/muc#roomconfig';
 
+// XEP-0249 (Direct MUC Invitations)
+const directMucInvitationXmlns = 'jabber:x:conference';
+
 // XEP-0048 Bookmarks (legacy storage + PEP conversion)
 const bookmarksXmlns = 'storage:bookmarks';
 const bookmarksConversionXmlns = 'urn:xmpp:bookmarks-conversion:0';

@@ -1,5 +1,6 @@
 import 'package:moxxmpp/src/events.dart';
 import 'package:moxxmpp/src/jid.dart';
+import 'package:moxxmpp/src/xeps/xep_0045/invitation.dart';
 import 'package:moxxmpp/src/xeps/xep_0045/types.dart';
 
 /// Triggered when the MUC changes our nickname.
@@ -75,4 +76,15 @@ class RoomSubjectChangedEvent extends XmppEvent {
 
   /// The new subject text (may be empty when cleared).
   final String subject;
+}
+
+/// A MUC invitation arrived (XEP-0045 mediated or XEP-0249 direct).
+///
+/// The stanza is consumed by the manager that parsed it: an invitation is
+/// not a chat message, and handing it to the message pipeline stores an
+/// empty bubble.
+class MucInvitationReceivedEvent extends XmppEvent {
+  MucInvitationReceivedEvent(this.invitation);
+
+  final MucInvitation invitation;
 }

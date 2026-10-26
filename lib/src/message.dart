@@ -13,7 +13,6 @@ import 'package:moxxmpp/src/util/typed_map.dart';
 import 'package:moxxmpp/src/xeps/xep_0066.dart';
 import 'package:moxxmpp/src/xeps/xep_0447.dart';
 import 'package:moxxmpp/src/xeps/xep_0449.dart';
-import 'package:moxxmpp/src/xeps/xep_0461.dart';
 
 extension StringToJid on String {
   JID toJID() {

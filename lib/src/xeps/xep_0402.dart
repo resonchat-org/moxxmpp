@@ -82,7 +82,7 @@ class ConferenceBookmark {
       attributes: {
         'jid': jid,
         if (autoJoin) 'autojoin': 'true',
-        if (name != null && name!.isNotEmpty) 'name': name!,
+        if (name != null && name!.isNotEmpty) 'name': name,
       },
       children: [
         if (nick != null && nick!.isNotEmpty) XMLNode(tag: 'nick', text: nick),
@@ -247,15 +247,17 @@ class BookmarksManager extends XmppManagerBase {
     await _ensureFeatures();
     if (_native) {
       final result = await _fetchNative();
-      if (result.isType<PubSubError>())
+      if (result.isType<PubSubError>()) {
         return Result(result.get<PubSubError>());
+      }
       _replaceAll(result.get<List<ConferenceBookmark>>());
       return Result(bookmarks);
     }
     if (_legacy) {
       final result = await _fetchLegacy();
-      if (result.isType<PubSubError>())
+      if (result.isType<PubSubError>()) {
         return Result(result.get<PubSubError>());
+      }
       _replaceAll(result.get<List<ConferenceBookmark>>());
       return Result(bookmarks);
     }

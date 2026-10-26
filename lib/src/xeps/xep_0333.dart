@@ -34,13 +34,10 @@ enum ChatMarker {
     switch (this) {
       case ChatMarker.received:
         tag = 'received';
-        break;
       case ChatMarker.displayed:
         tag = 'displayed';
-        break;
       case ChatMarker.acknowledged:
         tag = 'acknowledged';
-        break;
     }
 
     return XMLNode.xmlns(tag: tag, xmlns: chatMarkersXmlns);

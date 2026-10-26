@@ -21,7 +21,6 @@ Map<String, String> parseKeyValue(String keyValueString) {
             name += char;
           }
         }
-        break;
       case ParserState.variableValue:
         {
           if (char == ',' || i == keyValueString.length - 1) {
@@ -37,7 +36,6 @@ Map<String, String> parseKeyValue(String keyValueString) {
             value += char;
           }
         }
-        break;
     }
   }
 

@@ -29,8 +29,9 @@ bool compareXMLNodes(
   if (actualAttributeLength != expectedAttributeLength) return false;
 
   if (expectation.innerText() != '' &&
-      actual.innerText() != expectation.innerText())
+      actual.innerText() != expectation.innerText()) {
     return false;
+  }
 
   return expectation.children.every((childe) {
     return actual.children.any((childa) => compareXMLNodes(childa, childe));

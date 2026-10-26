@@ -52,16 +52,30 @@ class VCardManager extends XmppManagerBase {
     _lastHash[jid] = hash;
   }
 
+  /// SHA-1 from the latest XEP-0153 presence for [jid].
+  ///
+  /// Keyed by the full address presence came from, so an occupant is
+  /// `room@server/nick` and not the room. Empty string means `<photo/>`
+  /// advertised no image. Null means this address has not advertised yet.
+  String? photoHashFor(JID jid) => _lastHash[jid.toString()];
+
   Future<StanzaHandlerData> _onPresence(
     Stanza presence,
     StanzaHandlerData state,
   ) async {
+    final from = presence.from;
+    if (from == null || from.isEmpty) return state;
     final x = presence.firstTag('x', xmlns: vCardTempUpdate)!;
-    final hash = x.firstTag('photo')!.innerText();
+    final photo = x.firstTag('photo');
+    if (photo == null) return state;
+    // XEP-0153 hashes are hex SHA-1; case is not significant.
+    final hash = photo.innerText().trim().toLowerCase();
+    final jid = JID.fromString(from);
+    final key = jid.toString();
+    if (_lastHash[key] == hash) return state;
+    _lastHash[key] = hash;
 
-    getAttributes().sendEvent(
-      VCardAvatarUpdatedEvent(JID.fromString(presence.from!), hash),
-    );
+    getAttributes().sendEvent(VCardAvatarUpdatedEvent(jid, hash));
     return state;
   }
 
@@ -85,10 +99,18 @@ class VCardManager extends XmppManagerBase {
   Future<Result<VCardError, VCard>> requestVCard(JID jid) async {
     // Plain IQ — same as publishPhoto / Conversations. Do not OMEMO-wrap
     // (MUC room vCards and many servers reject encrypted vCard-temp).
+    //
+    // Address the JID we were given. XEP-0153 occupant avatars are an IQ to
+    // `room@server/nick`; baring that asks the room for its own vCard, and
+    // every member without a visible real JID is then drawn with the room
+    // photo. Contacts and the room itself are already bare when passed.
+    // publishPhoto stays bare: a room avatar is published to the room.
+    // The awaiter correlates replies on the bare JID plus stanza id, so a
+    // full-JID request still completes when the occupant answers.
     final result = (await getAttributes().sendStanza(
       StanzaDetails(
         Stanza.iq(
-          to: jid.toBare().toString(),
+          to: jid.toString(),
           type: 'get',
           children: [XMLNode.xmlns(tag: 'vCard', xmlns: vCardTempXmlns)],
         ),

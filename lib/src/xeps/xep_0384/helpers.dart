@@ -16,7 +16,7 @@ AxolotlBundle axolotlBundleFromXML(JID jid, int id, XMLNode bundle) {
 
   final spk = bundle.firstTag('spk') ?? bundle.firstTag('signedPreKeyPublic');
   if (spk == null) {
-    throw FormatException('bundle missing signed prekey');
+    throw const FormatException('bundle missing signed prekey');
   }
   final spkId = int.parse(
     (spk.attributes['id'] ?? spk.attributes['signedPreKeyId'])! as String,
@@ -27,7 +27,7 @@ AxolotlBundle axolotlBundleFromXML(JID jid, int id, XMLNode bundle) {
       bundle.firstTag('spsk');
   final ik = bundle.firstTag('ik') ?? bundle.firstTag('identityKey');
   if (spks == null || ik == null) {
-    throw FormatException('bundle missing spks/ik');
+    throw const FormatException('bundle missing spks/ik');
   }
 
   final prekeys = <int, String>{};

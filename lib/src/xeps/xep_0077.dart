@@ -44,7 +44,7 @@ class RedirectRegistration extends RegistrationChallenge {
   final Uri url;
 }
 
-/// Returned from [XmppConnection.connect] when IBR completed successfully.
+/// Returned from `XmppConnection.connect` when IBR completed successfully.
 ///
 /// Not a failure: the socket is closed afterwards so the client can log in
 /// with SASL (Conversations `REGISTRATION_SUCCESSFUL`).
@@ -101,7 +101,6 @@ class RegistrationFailedError extends NegotiatorError {
 DataForm submitRegistrationForm(DataForm form, Map<String, String> overrides) {
   return DataForm(
     type: 'submit',
-    title: null,
     instructions: const [],
     reported: const [],
     items: const [],
@@ -110,8 +109,6 @@ DataForm submitRegistrationForm(DataForm form, Map<String, String> overrides) {
         DataFormField(
           varAttr: field.varAttr,
           type: field.type,
-          label: null,
-          description: null,
           isRequired: false,
           options: const [],
           values: overrides.containsKey(field.varAttr)
@@ -223,7 +220,7 @@ enum _IbrPhase { idle, awaitingGet, awaitingUser, awaitingSet }
 
 /// Stream-feature negotiator for XEP-0077 (Conversations registration path).
 ///
-/// Matches only when [ConnectionSettings.register] is true. After STARTTLS /
+/// Matches only when `ConnectionSettings.register` is true. After STARTTLS /
 /// WSS it issues IQ-get register, then IQ-set. Captcha forms pause until
 /// [submitCaptcha] is called.
 class InBandRegistrationNegotiator extends XmppFeatureNegotiatorBase {

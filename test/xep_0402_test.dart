@@ -7,7 +7,7 @@ import 'package:moxxmpp/src/xeps/xep_0402.dart';
 void main() {
   group('ConferenceBookmark native XML', () {
     test('round-trips fields', () {
-      final original = ConferenceBookmark(
+      const original = ConferenceBookmark(
         jid: 'room@conference.example.org',
         name: 'Room',
         nick: 'alice',
@@ -49,7 +49,7 @@ void main() {
 
   group('ConferenceBookmark legacy XML', () {
     test('round-trips via storage conference', () {
-      final original = ConferenceBookmark(
+      const original = ConferenceBookmark(
         jid: 'room@conference.example.org',
         name: 'Room',
         nick: 'bob',

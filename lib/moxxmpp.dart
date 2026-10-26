@@ -1,5 +1,3 @@
-library moxxmpp;
-
 export 'package:moxxmpp/src/connection.dart';
 export 'package:moxxmpp/src/connection_errors.dart';
 export 'package:moxxmpp/src/connectivity.dart';
@@ -49,6 +47,7 @@ export 'package:moxxmpp/src/xeps/xep_0030/types.dart';
 export 'package:moxxmpp/src/xeps/xep_0030/xep_0030.dart';
 export 'package:moxxmpp/src/xeps/xep_0045/errors.dart';
 export 'package:moxxmpp/src/xeps/xep_0045/events.dart';
+export 'package:moxxmpp/src/xeps/xep_0045/invitation.dart';
 export 'package:moxxmpp/src/xeps/xep_0045/types.dart';
 export 'package:moxxmpp/src/xeps/xep_0045/xep_0045.dart';
 export 'package:moxxmpp/src/xeps/xep_0054.dart';
@@ -71,6 +70,7 @@ export 'package:moxxmpp/src/xeps/xep_0198/nonzas.dart';
 export 'package:moxxmpp/src/xeps/xep_0198/state.dart';
 export 'package:moxxmpp/src/xeps/xep_0198/xep_0198.dart';
 export 'package:moxxmpp/src/xeps/xep_0203.dart';
+export 'package:moxxmpp/src/xeps/xep_0249.dart';
 export 'package:moxxmpp/src/xeps/xep_0264.dart';
 export 'package:moxxmpp/src/xeps/xep_0280.dart';
 export 'package:moxxmpp/src/xeps/xep_0297.dart';

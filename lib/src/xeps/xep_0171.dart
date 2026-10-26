@@ -245,8 +245,8 @@ class TranslationResponse {
 /// `<x/>` for an IQ get that asks a provider to translate [text].
 XMLNode translationRequestElement({
   required String text,
-  String? sourceLang,
   required String destinationLang,
+  String? sourceLang,
   String? dictionary,
 }) {
   final source = xmppLanguagePrimary(sourceLang ?? '');
@@ -418,8 +418,8 @@ class LanguageTranslationManager extends XmppManagerBase {
   Future<Result<StanzaError, TranslationResponse>> requestTranslation(
     JID provider, {
     required String text,
-    String? sourceLang,
     required String destinationLang,
+    String? sourceLang,
     String? dictionary,
   }) async {
     final stanza = await getAttributes().sendStanza(

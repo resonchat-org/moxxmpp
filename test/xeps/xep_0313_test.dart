@@ -44,13 +44,13 @@ void main() {
     // what servers put in MAM forwards (Stanza.message() omits xmlns by default).
     final wrapper = Stanza.fromXMLNode(
       XMLNode.fromString('''
-<message from="${archive}" xmlns="jabber:client">
+<message from="$archive" xmlns="jabber:client">
   <result xmlns="$mamXmlns" queryid="$queryId" id="archive-1">
     <forwarded xmlns="$forwardedXmlns">
       <delay xmlns="$delayedDeliveryXmlns" stamp="2024-01-01T00:00:00Z"/>
       <message xmlns="jabber:client"
                from="alice@example.org/phone"
-               to="${archive}"
+               to="$archive"
                id="inner-1"
                type="chat">
         <body>$_axolotlFallback</body>
@@ -72,7 +72,6 @@ void main() {
       stanzaTag: 'message',
       tagName: 'encrypted',
       tagXmlns: emeOmemo,
-      priority: 0,
       callback: (stanza, state) async {
         sawEncrypted = true;
         // Replace fallback the way OmemoManager would after a successful decrypt.

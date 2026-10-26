@@ -38,6 +38,7 @@ const entityCapabilitiesManager = 'org.moxxmpp.entitycapabilities';
 const messageProcessingHintManager = 'org.moxxmpp.messageprocessinghint';
 const occupantIdManager = 'org.moxxmpp.occupantidmanager';
 const mucManager = 'org.moxxmpp.mucmanager';
+const directMucInvitationManager = 'org.moxxmpp.directmucinvitationmanager';
 const mamManager = 'org.moxxmpp.mammanager';
 const inBandRegistrationManager = 'org.moxxmpp.inbandregistrationmanager';
 const bookmarksManager = 'org.moxxmpp.bookmarksmanager';

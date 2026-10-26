@@ -143,16 +143,12 @@ class CryptographicHashManager extends XmppManagerBase {
     switch (function) {
       case HashFunction.sha1:
         algo = Sha1();
-        break;
       case HashFunction.sha256:
         algo = Sha256();
-        break;
       case HashFunction.sha512:
         algo = Sha512();
-        break;
       case HashFunction.blake2b512:
         algo = Blake2b();
-        break;
       // ignore: no_default_cases
       default:
         throw Exception();

@@ -94,7 +94,6 @@ class OmemoManager extends XmppManagerBase {
       tagXmlns: emeOmemo,
       tagName: 'encrypted',
       callback: _onIncomingStanza,
-      priority: omemoIncomingDecryptPriority,
     ),
   ];
 
@@ -431,7 +430,7 @@ class OmemoManager extends XmppManagerBase {
     }
 
     if (result.payload != null) {
-      children.add(XMLNode(tag: 'body', text: result.payload!));
+      children.add(XMLNode(tag: 'body', text: result.payload));
     }
 
     if (stanza.tag == 'message' && encrypted.firstTag('payload') == null) {

@@ -18,6 +18,7 @@ import 'package:moxxmpp/src/xeps/xep_0030/types.dart';
 import 'package:moxxmpp/src/xeps/xep_0030/xep_0030.dart';
 import 'package:moxxmpp/src/xeps/xep_0045/errors.dart';
 import 'package:moxxmpp/src/xeps/xep_0045/events.dart';
+import 'package:moxxmpp/src/xeps/xep_0045/invitation.dart';
 import 'package:moxxmpp/src/xeps/xep_0045/status_codes.dart';
 import 'package:moxxmpp/src/xeps/xep_0045/types.dart';
 import 'package:moxxmpp/src/xeps/xep_0359.dart';
@@ -246,6 +247,36 @@ class MUCManager extends XmppManagerBase {
     return _cacheLock.synchronized(() => _mucRoomCache[roomJid]);
   }
 
+  /// Ask the room to invite [invitee] (XEP-0045 mediated invite).
+  ///
+  /// The room relays the stanza; this does not check whether the caller is
+  /// allowed to invite. Members-only rooms still need the invitee's
+  /// affiliation raised separately, or the invite arrives at someone the
+  /// room will not let in.
+  Future<void> invite(JID roomJid, JID invitee) async {
+    await getAttributes().sendStanza(
+      StanzaDetails(
+        mediatedMucInviteMessage(room: roomJid, invitee: invitee),
+        awaitable: false,
+        shouldEncrypt: false,
+      ),
+    );
+  }
+
+  /// Refuse a mediated invite (XEP-0045 `<decline/>`).
+  ///
+  /// [inviter] is who the room should tell. Pass null when the invite did
+  /// not name them.
+  Future<void> declineInvitation(JID roomJid, {JID? inviter}) async {
+    await getAttributes().sendStanza(
+      StanzaDetails(
+        mediatedMucDeclineMessage(room: roomJid, inviter: inviter),
+        awaitable: false,
+        shouldEncrypt: false,
+      ),
+    );
+  }
+
   /// Sets the room subject (Conversations `MultiUserChatManager.setSubject`).
   ///
   /// Sends a `groupchat` message with a `<subject/>` child and no body.
@@ -286,9 +317,7 @@ class MUCManager extends XmppManagerBase {
       if (completer == null || completer.isCompleted) return state;
 
       final errorTag = presence.firstTag('error');
-      final condition = errorTag == null
-          ? null
-          : errorTag.firstTagByXmlns(fullStanzaXmlns)?.tag;
+      final condition = errorTag?.firstTagByXmlns(fullStanzaXmlns)?.tag;
       final Result<bool, MUCError> result;
       switch (condition) {
         case 'forbidden':
@@ -480,6 +509,15 @@ class MUCManager extends XmppManagerBase {
     Stanza message,
     StanzaHandlerData state,
   ) async {
+    // Before the room-cache lookup. A mediated invite arrives from a room
+    // we have not joined, so it is not in [_mucRoomCache], and it is not a
+    // message to store.
+    final invitation = parseMediatedMucInvitation(message);
+    if (invitation != null) {
+      getAttributes().sendEvent(MucInvitationReceivedEvent(invitation));
+      return StanzaHandlerData(true, false, message, state.extensions);
+    }
+
     final fromJid = JID.fromString(message.from!);
     final roomJid = fromJid.toBare();
     return _cacheLock.synchronized(() {

@@ -156,7 +156,7 @@ class RoomMember {
 }
 
 class RoomState {
-  RoomState({required this.roomJid, this.nick, required this.joined}) {
+  RoomState({required this.roomJid, required this.joined, this.nick}) {
     pendingMessages = List<PendingMessage>.empty(growable: true);
   }
 
