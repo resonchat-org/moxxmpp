@@ -209,7 +209,7 @@ class StreamManagementManager extends XmppManagerBase {
           _stopAckTimer();
         case XmppConnectionState.connecting:
           _stopAckTimer();
-          // NOOP
+        // NOOP
       }
     }
   }
